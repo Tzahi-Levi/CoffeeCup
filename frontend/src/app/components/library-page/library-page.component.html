@@ -1,0 +1,23 @@
+<div class="library-page">
+  <div class="library-page__container">
+    <div class="library-page__toolbar">
+      <app-search-bar (searchQuery)="onSearch($event)" />
+    </div>
+
+    <app-coffee-card-grid
+      [coffees]="(filteredCoffees$ | async) ?? []"
+      (edit)="onEdit($event)"
+      (delete)="onDeleteRequest($event)"
+    />
+  </div>
+
+  <app-fab-button />
+
+  @if (pendingDeleteId) {
+    <app-confirm-dialog
+      message="Delete this coffee entry? This cannot be undone."
+      (confirmed)="onDeleteConfirmed()"
+      (cancelled)="onDeleteCancelled()"
+    />
+  }
+</div>

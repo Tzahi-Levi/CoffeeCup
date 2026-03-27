@@ -1,0 +1,49 @@
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  &__label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    letter-spacing: 0.03em;
+  }
+
+  &__input-wrap {
+    display: flex;
+    flex-direction: column;
+
+    // Style any native inputs projected into this slot
+    :global(input),
+    :global(textarea),
+    :global(select) {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-btn);
+      color: var(--color-text-primary);
+      font-family: var(--font-family-primary);
+      font-size: var(--font-size-base);
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      resize: vertical;
+
+      &::placeholder {
+        color: var(--color-text-muted);
+      }
+
+      &:focus {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px var(--color-accent-glow);
+      }
+    }
+  }
+
+  &__error {
+    font-size: var(--font-size-xs);
+    color: var(--color-error);
+    font-weight: var(--font-weight-medium);
+  }
+}

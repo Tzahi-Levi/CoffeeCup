@@ -1,0 +1,6 @@
+<div class="app-shell">
+  <app-toolbar />
+  <main class="main-content" [@pageSlide]="getRouteAnimation(outlet)">
+    <router-outlet #outlet="outlet" />
+  </main>
+</div>

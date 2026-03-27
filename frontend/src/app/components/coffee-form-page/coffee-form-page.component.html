@@ -1,0 +1,153 @@
+<div class="form-page">
+  <div class="form-page__container">
+    <div class="form-page__header">
+      <h2 class="form-page__title">{{ isEditMode ? 'Edit Coffee' : 'Add Coffee' }}</h2>
+      <p class="form-page__subtitle">{{ isEditMode ? 'Update your espresso settings' : 'Save your espresso settings' }}</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-page__form" novalidate>
+      <app-form-field label="Coffee Name *" [errorMessage]="getError('name')">
+        <input type="text" formControlName="name" placeholder="e.g. Brazilian Santos" />
+      </app-form-field>
+
+      <app-form-field label="Origin / Roast" [errorMessage]="getError('origin')">
+        <input type="text" formControlName="origin" placeholder="e.g. Light Roast, Brazil" />
+      </app-form-field>
+
+      <!-- Roast Level -->
+      <div class="form-page__field-block">
+        <span class="form-page__field-label">Roast Level</span>
+        <div class="form-page__segment-group" role="group" aria-label="Roast level">
+          @for (level of roastLevels; track level.value) {
+            <button
+              type="button"
+              class="form-page__segment-btn"
+              [class.form-page__segment-btn--active]="form.get('roastLevel')?.value === level.value"
+              (click)="selectRoastLevel(level.value)"
+            >{{ level.label }}</button>
+          }
+        </div>
+      </div>
+
+      <!-- Coffee Type -->
+      <div class="form-page__field-block">
+        <span class="form-page__field-label">Coffee Type</span>
+        <div class="form-page__toggle-group" role="group" aria-label="Coffee type">
+          <button
+            type="button"
+            class="form-page__toggle-btn"
+            [class.form-page__toggle-btn--active]="form.get('coffeeType')?.value === 'single-origin'"
+            (click)="selectCoffeeType('single-origin')"
+          >Single Origin</button>
+          <button
+            type="button"
+            class="form-page__toggle-btn"
+            [class.form-page__toggle-btn--active]="form.get('coffeeType')?.value === 'blend'"
+            (click)="selectCoffeeType('blend')"
+          >Blend</button>
+        </div>
+      </div>
+
+      <!-- Blend Builder (shown only when coffeeType === 'blend') -->
+      @if (isBlend) {
+        <div class="form-page__blend-builder" formArrayName="blendComponents">
+          <div class="form-page__blend-header">
+            <span class="form-page__field-label">Blend Components</span>
+            <span
+              class="form-page__blend-total"
+              [class.form-page__blend-total--valid]="blendTotal === 100"
+              [class.form-page__blend-total--invalid]="blendTotal !== 100"
+            >{{ blendTotal }}% of 100%</span>
+          </div>
+
+          @if (blendComponents.touched && blendComponents.errors?.['blendTotal']) {
+            <p class="form-page__blend-error">Percentages must add up to 100% (currently {{ blendComponents.errors?.['blendTotal'].actual }}%)</p>
+          }
+
+          @for (component of blendComponents.controls; track component; let i = $index) {
+            <div class="form-page__blend-row" [formGroupName]="i">
+              <div class="form-page__blend-origin">
+                <input
+                  type="text"
+                  formControlName="origin"
+                  placeholder="e.g. Ethiopia Yirgacheffe"
+                  class="form-page__blend-input"
+                  [class.form-page__blend-input--error]="!!getBlendComponentError(i, 'origin')"
+                />
+                @if (getBlendComponentError(i, 'origin')) {
+                  <span class="form-page__blend-field-error">{{ getBlendComponentError(i, 'origin') }}</span>
+                }
+              </div>
+              <div class="form-page__blend-pct">
+                <input
+                  type="number"
+                  formControlName="percentage"
+                  min="1"
+                  max="100"
+                  placeholder="%"
+                  class="form-page__blend-input form-page__blend-input--pct"
+                  [class.form-page__blend-input--error]="!!getBlendComponentError(i, 'percentage')"
+                />
+                @if (getBlendComponentError(i, 'percentage')) {
+                  <span class="form-page__blend-field-error">{{ getBlendComponentError(i, 'percentage') }}</span>
+                }
+              </div>
+              <button
+                type="button"
+                class="form-page__blend-remove"
+                aria-label="Remove component"
+                (click)="removeBlendComponent(i)"
+              >&#x2715;</button>
+            </div>
+          }
+
+          <button type="button" class="form-page__blend-add" (click)="addBlendComponent()">
+            + Add Component
+          </button>
+        </div>
+      }
+
+      <app-form-field label="Grind Level (1–30)" [errorMessage]="getError('grindLevel')">
+        <app-grind-slider formControlName="grindLevel" />
+      </app-form-field>
+
+      <div class="form-page__row">
+        <app-form-field label="Dose (grams) *" [errorMessage]="getError('doseGrams')">
+          <input type="number" formControlName="doseGrams" min="1" max="50" placeholder="18" />
+        </app-form-field>
+
+        <app-form-field label="Brew Time (seconds) *" [errorMessage]="getError('brewTimeSeconds')">
+          <input type="number" formControlName="brewTimeSeconds" min="5" max="120" placeholder="30" />
+        </app-form-field>
+      </div>
+
+      <app-form-field label="Rating" [errorMessage]="''">
+        <div class="form-page__rating-wrap">
+          <app-star-rating
+            [rating]="form.get('rating')?.value || 0"
+            [readonly]="false"
+            (ratingChange)="onRatingChange($event)"
+          />
+          @if (form.get('rating')?.value) {
+            <button type="button" class="form-page__clear-rating" (click)="onRatingChange(0)">Clear</button>
+          }
+        </div>
+      </app-form-field>
+
+      <app-form-field label="Tasting Notes" [errorMessage]="getError('notes')">
+        <textarea formControlName="notes" rows="4" placeholder="Describe the flavor profile, aroma, aftertaste..."></textarea>
+      </app-form-field>
+
+      @if (submitError) {
+        <p class="form-page__submit-error">{{ submitError }}</p>
+      }
+
+      <div class="form-page__actions">
+        <button type="button" class="form-page__btn form-page__btn--cancel" (click)="onCancel()">Cancel</button>
+        <button type="submit" class="form-page__btn form-page__btn--submit">
+          {{ isEditMode ? 'Save Changes' : 'Add Coffee' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

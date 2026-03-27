@@ -1,0 +1,22 @@
+<div class="grind-slider">
+  <div class="slider-header">
+    <span class="slider-label">Grind Level</span>
+    <span class="slider-value">{{ value }}</span>
+  </div>
+  <input
+    type="range"
+    class="slider-input"
+    min="1"
+    max="30"
+    step="1"
+    [value]="value"
+    [disabled]="disabled"
+    (input)="onInput($event)"
+    (blur)="onBlur()"
+  />
+  <div class="slider-ticks">
+    @for (tick of ticks; track tick) {
+      <span class="tick">{{ tick }}</span>
+    }
+  </div>
+</div>

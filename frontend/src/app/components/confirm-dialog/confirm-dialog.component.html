@@ -1,0 +1,13 @@
+<div class="confirm-dialog-overlay" (click)="onCancel()" role="dialog" aria-modal="true">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <p class="confirm-dialog__message">{{ message }}</p>
+    <div class="confirm-dialog__actions">
+      <button type="button" class="confirm-dialog__btn confirm-dialog__btn--cancel" (click)="onCancel()">
+        Cancel
+      </button>
+      <button type="button" class="confirm-dialog__btn confirm-dialog__btn--confirm" (click)="onConfirm()">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>

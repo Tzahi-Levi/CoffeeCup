@@ -1,0 +1,25 @@
+.library-page {
+  min-height: calc(100vh - 72px);
+  padding: var(--space-4) var(--space-3);
+
+  @media (min-width: 640px) {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  @media (min-width: 1024px) {
+    padding: var(--space-8) var(--space-6);
+  }
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+    gap: var(--space-4);
+  }
+}

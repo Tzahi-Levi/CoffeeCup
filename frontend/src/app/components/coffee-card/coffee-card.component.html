@@ -1,0 +1,56 @@
+<article class="coffee-card">
+  <div class="coffee-card__header">
+    <div class="coffee-card__name-row">
+      <h2 class="coffee-card__name">{{ coffee.name }}</h2>
+      <div class="coffee-card__actions">
+        <button type="button" class="coffee-card__action-btn" title="Edit" aria-label="Edit coffee" (click)="edit.emit()">
+          <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></span>
+        </button>
+        <button type="button" class="coffee-card__action-btn coffee-card__action-btn--delete" title="Delete" aria-label="Delete coffee" (click)="delete.emit()">
+          <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg></span>
+        </button>
+      </div>
+    </div>
+    @if (coffee.origin) {
+      <p class="coffee-card__origin">{{ coffee.origin }}</p>
+    }
+    @if (coffee.roastLevel || coffee.coffeeType) {
+      <div class="coffee-card__meta-chips">
+        @if (coffee.roastLevel) {
+          <span class="coffee-card__chip coffee-card__chip--roast">{{ roastLevelLabel }}</span>
+        }
+        @if (coffee.coffeeType) {
+          <span class="coffee-card__chip coffee-card__chip--type">{{ coffeeTypeLabel }}</span>
+        }
+      </div>
+    }
+    @if (coffee.coffeeType === 'blend' && coffee.blendComponents.length) {
+      <p class="coffee-card__blend-breakdown">{{ blendBreakdown }}</p>
+    }
+  </div>
+
+  <div class="coffee-card__stats">
+    <div class="coffee-card__stat">
+      <span class="coffee-card__stat-label">Grind</span>
+      <span class="coffee-card__stat-value">{{ coffee.grindLevel }}/30</span>
+    </div>
+    <div class="coffee-card__stat">
+      <span class="coffee-card__stat-label">Dose</span>
+      <span class="coffee-card__stat-value">{{ coffee.doseGrams }}g</span>
+    </div>
+    <div class="coffee-card__stat">
+      <span class="coffee-card__stat-label">Brew</span>
+      <span class="coffee-card__stat-value">{{ coffee.brewTimeSeconds }}s</span>
+    </div>
+  </div>
+
+  @if (coffee.rating) {
+    <div class="coffee-card__rating">
+      <app-star-rating [rating]="coffee.rating" [readonly]="true" />
+    </div>
+  }
+
+  @if (truncatedNotes) {
+    <p class="coffee-card__notes">{{ truncatedNotes }}</p>
+  }
+</article>

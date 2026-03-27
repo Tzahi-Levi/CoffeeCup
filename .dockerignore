@@ -1,0 +1,6 @@
+**/node_modules
+**/dist
+frontend/.angular
+**/.git
+**/*.log
+**/coverage

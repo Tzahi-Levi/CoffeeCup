@@ -1,0 +1,96 @@
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(
+    180deg,
+    rgba(37, 20, 9, 0.98) 0%,
+    rgba(30, 16, 7, 0.96) 100%
+  );
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: var(--space-3) var(--space-4);
+  // Subtle bottom glow that bleeds into the page
+  box-shadow:
+    0 1px 0 rgba(201, 123, 16, 0.1),
+    0 2px 20px rgba(0, 0, 0, 0.3),
+    0 4px 24px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  @media (min-width: 640px) {
+    padding: var(--space-4) var(--space-6);
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  &__icon {
+    line-height: 0;
+    color: var(--color-accent);
+    // Soft glow behind the icon
+    filter: drop-shadow(0 0 8px var(--color-accent-glow));
+  }
+
+  .icon {
+    display: inline-flex;
+    align-items: center;
+
+    svg {
+      width: 1.5rem;
+      height: 1.5rem;
+
+      @media (min-width: 640px) {
+        width: 1.75rem;
+        height: 1.75rem;
+      }
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__title {
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    // Gradient text for the brand name
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-hover) 0%,
+      var(--color-accent) 50%,
+      #A86508 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: -0.02em;
+
+    @media (min-width: 640px) {
+      font-size: var(--font-size-xl);
+    }
+  }
+
+  &__tagline {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin: 0;
+    font-weight: var(--font-weight-normal);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: none;
+
+    @media (min-width: 480px) {
+      display: block;
+    }
+  }
+}

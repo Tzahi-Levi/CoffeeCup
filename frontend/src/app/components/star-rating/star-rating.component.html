@@ -1,0 +1,12 @@
+<div class="star-rating" [class.star-rating--interactive]="!readonly" [attr.aria-label]="'Rating: ' + rating + ' out of 5'">
+  @for (star of stars; track star) {
+    <button
+      type="button"
+      class="star-rating__star"
+      [class.star-rating__star--filled]="isFilled(star)"
+      [disabled]="readonly"
+      (click)="setRating(star)"
+      [attr.aria-label]="'Rate ' + star + ' stars'"
+    >&#9733;</button>
+  }
+</div>
