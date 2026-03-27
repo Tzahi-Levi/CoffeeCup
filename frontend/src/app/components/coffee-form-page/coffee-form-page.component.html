@@ -144,7 +144,7 @@
 
       <div class="form-page__actions">
         <button type="button" class="form-page__btn form-page__btn--cancel" (click)="onCancel()">Cancel</button>
-        <button type="submit" class="form-page__btn form-page__btn--submit">
+        <button type="submit" class="form-page__btn form-page__btn--submit" [disabled]="submitting">
           {{ isEditMode ? 'Save Changes' : 'Add Coffee' }}
         </button>
       </div>

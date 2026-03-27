@@ -36,6 +36,7 @@ export class CoffeeFormPageComponent implements OnInit {
   form!: FormGroup;
   editId: string | null = null;
   isEditMode = false;
+  submitting = false;
   submitError: string | null = null;
 
   readonly roastLevels: { value: RoastLevel; label: string }[] = [
@@ -200,15 +201,27 @@ export class CoffeeFormPageComponent implements OnInit {
       }))
     };
 
-    try {
-      if (this.isEditMode && this.editId) {
-        this.coffeeService.updateCoffee(this.editId, payload);
-      } else {
-        this.coffeeService.addCoffee(payload);
-      }
-      this.router.navigate(['/']);
-    } catch (err) {
-      this.submitError = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
+    this.submitting = true;
+    this.submitError = null;
+
+    if (this.isEditMode && this.editId) {
+      this.coffeeService.updateCoffee(this.editId, payload).subscribe({
+        next: () => this.router.navigate(['/']),
+        error: (err) => {
+          console.error('[CoffeeFormPage] Update failed', err);
+          this.submitError = 'Failed to update coffee. Please try again.';
+          this.submitting = false;
+        }
+      });
+    } else {
+      this.coffeeService.addCoffee(payload).subscribe({
+        next: () => this.router.navigate(['/']),
+        error: (err) => {
+          console.error('[CoffeeFormPage] Add failed', err);
+          this.submitError = 'Failed to save coffee. Please try again.';
+          this.submitting = false;
+        }
+      });
     }
   }
 

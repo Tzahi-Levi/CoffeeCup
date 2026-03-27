@@ -15,6 +15,9 @@ describe('CoffeeCardComponent', () => {
     brewTimeSeconds: 28,
     notes: 'Bright and floral',
     rating: 4,
+    roastLevel: 'light',
+    coffeeType: 'single-origin',
+    blendComponents: [],
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z'
   };
