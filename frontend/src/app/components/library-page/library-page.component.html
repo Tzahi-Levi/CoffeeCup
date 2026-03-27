@@ -4,11 +4,18 @@
       <app-search-bar (searchQuery)="onSearch($event)" />
     </div>
 
-    <app-coffee-card-grid
-      [coffees]="(filteredCoffees$ | async) ?? []"
-      (edit)="onEdit($event)"
-      (delete)="onDeleteRequest($event)"
-    />
+    @if (loading) {
+      <div class="library-page__loading" aria-live="polite">
+        <div class="library-page__spinner" role="status" aria-label="Loading coffees"></div>
+        <p class="library-page__loading-text">Loading your coffees...</p>
+      </div>
+    } @else {
+      <app-coffee-card-grid
+        [coffees]="(filteredCoffees$ | async) ?? []"
+        (edit)="onEdit($event)"
+        (delete)="onDeleteRequest($event)"
+      />
+    }
   </div>
 
   <app-fab-button />

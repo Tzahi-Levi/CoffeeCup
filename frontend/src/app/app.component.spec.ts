@@ -28,7 +28,7 @@ describe('AppComponent', () => {
   it('getRouteAnimation returns the animation key from route data', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    const mockOutlet = { activatedRouteData: { animation: 'LibraryPage' } } as RouterOutlet;
+    const mockOutlet = { activatedRouteData: { animation: 'LibraryPage' } } as unknown as RouterOutlet;
     expect(app.getRouteAnimation(mockOutlet)).toBe('LibraryPage');
   });
 });

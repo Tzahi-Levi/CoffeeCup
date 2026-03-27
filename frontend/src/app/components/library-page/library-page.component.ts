@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, skip, take } from 'rxjs';
 import { CoffeeEntry } from '../../models/coffee.models';
 import { CoffeeService } from '../../services/coffee.service';
 import { SearchService } from '../../services/search.service';
@@ -20,6 +20,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 export class LibraryPageComponent implements OnInit {
   filteredCoffees$!: Observable<CoffeeEntry[]>;
   pendingDeleteId: string | null = null;
+  loading = true;
 
   constructor(
     private coffeeService: CoffeeService,
@@ -29,6 +30,13 @@ export class LibraryPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.filteredCoffees$ = this.coffeeService.filteredCoffees$(this.searchService.query$);
+
+    // coffees$ is a BehaviorSubject that emits [] synchronously on subscribe,
+    // then emits again with real data once the HTTP fetch completes.
+    // skip(1) ignores the initial seed value; take(1) captures the first real load.
+    this.coffeeService.coffees$.pipe(skip(1), take(1)).subscribe(() => {
+      this.loading = false;
+    });
   }
 
   onSearch(query: string): void {
@@ -45,7 +53,9 @@ export class LibraryPageComponent implements OnInit {
 
   onDeleteConfirmed(): void {
     if (this.pendingDeleteId) {
-      this.coffeeService.deleteCoffee(this.pendingDeleteId);
+      this.coffeeService.deleteCoffee(this.pendingDeleteId).subscribe({
+        error: (err) => console.error('[LibraryPage] Delete failed', err)
+      });
     }
     this.pendingDeleteId = null;
   }

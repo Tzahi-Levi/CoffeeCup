@@ -1,49 +1,47 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest, map, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, EMPTY, Observable, combineLatest, map, tap, catchError, debounceTime, distinctUntilChanged } from 'rxjs';
 import { CoffeeEntry, CoffeeEntryPayload } from '../models/coffee.models';
 
-const STORAGE_KEY = 'coffeecup_v1';
+/** Wrapper shape returned by all non-DELETE API endpoints. */
+interface ApiResponse<T> {
+  data: T;
+}
+
+const API_BASE = '/api/v1/coffees';
 
 /**
- * Singleton service that owns all coffee-entry state and persistence.
+ * Singleton service that owns all coffee-entry state.
  *
- * State is held in a `BehaviorSubject<CoffeeEntry[]>` so that any
- * component can subscribe to live updates without polling. After every
- * mutation the updated array is serialized to `localStorage` under the
- * key `coffeecup_v1`, giving the data zero-dependency persistence across
- * page refreshes.
+ * State is held in a `BehaviorSubject<CoffeeEntry[]>` that acts as a
+ * local cache. The source of truth is the backend API. After every
+ * mutation the cache is refreshed by calling `loadAll()`.
  *
  * Components must never mutate entries directly. All writes must go
- * through the public methods of this service so that the BehaviorSubject
- * and localStorage stay in sync.
- *
- * @example
- * // Inject and subscribe to the full list
- * constructor(private coffeeService: CoffeeService) {}
- *
- * ngOnInit(): void {
- *   this.coffeeService.coffees$.subscribe(entries => {
- *     console.log('Current entries:', entries);
- *   });
- * }
- *
- * @since 1.0.0
+ * through the public methods of this service so that the cache stays
+ * in sync with the server.
  */
 @Injectable({
   providedIn: 'root'
 })
 export class CoffeeService {
-  private readonly _coffees$ = new BehaviorSubject<CoffeeEntry[]>(this.loadFromStorage());
+  private readonly http = inject(HttpClient);
+  private readonly _coffees$ = new BehaviorSubject<CoffeeEntry[]>([]);
 
   /**
-   * Observable stream of all coffee entries in insertion order.
+   * Observable stream of all coffee entries.
    *
    * Emits the current array immediately on subscription, then emits
-   * again whenever any entry is added, updated, or deleted.
+   * again whenever the local cache is refreshed from the server.
    *
    * Use `filteredCoffees$` if you need a search-aware view.
    */
   readonly coffees$: Observable<CoffeeEntry[]> = this._coffees$.asObservable();
+
+  constructor() {
+    // Seed the local cache from the API on application startup.
+    this.loadAll().subscribe();
+  }
 
   /**
    * Returns an observable of coffee entries filtered by a live search query.
@@ -59,10 +57,6 @@ export class CoffeeService {
    *   `SearchService.query$`, but any `Observable<string>` is accepted.
    * @returns An observable that emits a filtered `CoffeeEntry[]` on every
    *   meaningful change to either the entry list or the debounced query.
-   *
-   * @example
-   * // In a component that injects both services
-   * this.filtered$ = this.coffeeService.filteredCoffees$(this.searchService.query$);
    */
   filteredCoffees$(query$: Observable<string>): Observable<CoffeeEntry[]> {
     return combineLatest([this._coffees$, query$.pipe(debounceTime(200), distinctUntilChanged())]).pipe(
@@ -79,153 +73,82 @@ export class CoffeeService {
   }
 
   /**
-   * Creates a new coffee entry from the given payload and persists it.
+   * Creates a new coffee entry via the API.
    *
-   * A UUID v4 (`crypto.randomUUID()`) is generated for `id`, and ISO 8601
-   * timestamps are set for both `createdAt` and `updatedAt`. The new entry
-   * is appended to the end of the list.
+   * A UUID v4 (`crypto.randomUUID()`) is generated client-side and included
+   * in the POST body so the backend uses the same id. On success the local
+   * cache is refreshed from the server.
    *
-   * @param payload - User-supplied field values. Must satisfy all
-   *   `CoffeeEntryPayload` constraints (see `coffee.models.ts`).
-   * @returns The fully constructed `CoffeeEntry` including the generated
-   *   `id`, `createdAt`, and `updatedAt` fields.
-   *
-   * @example
-   * const entry = this.coffeeService.addCoffee({
-   *   name: 'Brazilian Santos',
-   *   origin: 'Light Roast, Brazil',
-   *   grindLevel: 6,
-   *   doseGrams: 19,
-   *   brewTimeSeconds: 35,
-   *   notes: 'Chocolatey finish.',
-   *   rating: 4,
-   * });
-   * console.log(entry.id); // "a1b2c3d4-..."
+   * @param payload - User-supplied field values.
+   * @returns Observable emitting the created `CoffeeEntry` from the server.
    */
-  addCoffee(payload: CoffeeEntryPayload): CoffeeEntry {
-    const now = new Date().toISOString();
-    const entry: CoffeeEntry = {
-      ...payload,
-      id: crypto.randomUUID(),
-      createdAt: now,
-      updatedAt: now
-    };
-    const updated = [...this._coffees$.getValue(), entry];
-    this._coffees$.next(updated);
-    this.saveToStorage(updated);
-    return entry;
+  addCoffee(payload: CoffeeEntryPayload): Observable<CoffeeEntry> {
+    const body = { ...payload, id: crypto.randomUUID() };
+    return this.http.post<ApiResponse<CoffeeEntry>>(API_BASE, body).pipe(
+      map((response) => response.data),
+      tap(() => this.loadAll().subscribe())
+    );
   }
 
   /**
-   * Updates an existing coffee entry in place and persists the change.
+   * Updates an existing coffee entry via the API.
    *
-   * All fields from `payload` are merged onto the existing entry.
-   * `createdAt` is preserved. `updatedAt` is set to the current ISO
-   * timestamp. The entry's position in the list does not change.
+   * On success the local cache is refreshed from the server.
    *
    * @param id - The UUID of the entry to update.
-   * @param payload - Replacement field values. All payload fields are
-   *   required; partial updates are not supported.
-   * @returns The updated `CoffeeEntry` with the new `updatedAt` timestamp.
-   * @throws {Error} If no entry with the given `id` exists in the current
-   *   list. Guard with `getCoffeeById` before navigating to the edit form
-   *   to avoid this in practice.
-   *
-   * @example
-   * try {
-   *   const updated = this.coffeeService.updateCoffee(id, payload);
-   *   console.log('Updated at:', updated.updatedAt);
-   * } catch (e) {
-   *   console.error(e); // 'CoffeeEntry with id "..." not found'
-   * }
+   * @param payload - Replacement field values.
+   * @returns Observable emitting the updated `CoffeeEntry` from the server.
    */
-  updateCoffee(id: string, payload: CoffeeEntryPayload): CoffeeEntry {
-    const coffees = this._coffees$.getValue();
-    const index = coffees.findIndex((c) => c.id === id);
-    if (index === -1) {
-      throw new Error(`CoffeeEntry with id "${id}" not found`);
-    }
-    const updated: CoffeeEntry = {
-      ...coffees[index],
-      ...payload,
-      updatedAt: new Date().toISOString()
-    };
-    const updatedList = [...coffees.slice(0, index), updated, ...coffees.slice(index + 1)];
-    this._coffees$.next(updatedList);
-    this.saveToStorage(updatedList);
-    return updated;
+  updateCoffee(id: string, payload: CoffeeEntryPayload): Observable<CoffeeEntry> {
+    return this.http.put<ApiResponse<CoffeeEntry>>(`${API_BASE}/${id}`, payload).pipe(
+      map((response) => response.data),
+      tap(() => this.loadAll().subscribe())
+    );
   }
 
   /**
-   * Removes a coffee entry by id and persists the change.
+   * Removes a coffee entry by id via the API.
    *
-   * If no entry with the given id exists the call is a no-op — the list
-   * is unchanged and no error is thrown.
+   * On success the local cache is refreshed from the server.
    *
    * @param id - The UUID of the entry to remove.
-   *
-   * @example
-   * this.coffeeService.deleteCoffee('a1b2c3d4-e5f6-7890-abcd-ef1234567890');
+   * @returns Observable that completes on successful deletion.
    */
-  deleteCoffee(id: string): void {
-    const updated = this._coffees$.getValue().filter((c) => c.id !== id);
-    this._coffees$.next(updated);
-    this.saveToStorage(updated);
+  deleteCoffee(id: string): Observable<void> {
+    return this.http.delete<void>(`${API_BASE}/${id}`).pipe(
+      tap(() => this.loadAll().subscribe())
+    );
   }
 
   /**
-   * Returns a single coffee entry by id from the current in-memory list.
+   * Returns a single coffee entry by id from the current in-memory cache.
    *
    * This is a synchronous point-in-time read from the BehaviorSubject's
-   * current value — it does not return an observable. Use it for one-off
+   * current value -- it does not return an observable. Use it for one-off
    * lookups such as pre-populating the edit form on route activation.
    *
    * @param id - The UUID of the entry to retrieve.
    * @returns The matching `CoffeeEntry`, or `undefined` if not found.
-   *
-   * @example
-   * const entry = this.coffeeService.getCoffeeById(routeId);
-   * if (!entry) {
-   *   this.router.navigate(['/']);
-   *   return;
-   * }
-   * this.form.patchValue(entry);
    */
   getCoffeeById(id: string): CoffeeEntry | undefined {
     return this._coffees$.getValue().find((c) => c.id === id);
   }
 
-  private loadFromStorage(): CoffeeEntry[] {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as CoffeeEntry[];
-      // Migrate existing entries that predate the roastLevel / coffeeType / blendComponents fields.
-      return parsed.map((entry) => ({
-        ...entry,
-        roastLevel: entry.roastLevel ?? null,
-        coffeeType: entry.coffeeType ?? null,
-        blendComponents: entry.blendComponents ?? [],
-      }));
-    } catch (err) {
-      // Log parse failure so data-loss events are visible in DevTools; intentionally
-      // omits raw storage value to avoid exposing user coffee data in logs.
-      console.error('[CoffeeService] Failed to parse localStorage data — starting with empty list.', {
-        key: STORAGE_KEY,
-        error: err instanceof Error ? err.message : String(err),
-      });
-      return [];
-    }
-  }
-
-  private saveToStorage(coffees: CoffeeEntry[]): void {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(coffees));
-    } catch (err) {
-      console.error('[CoffeeService] Failed to save to localStorage — changes not persisted.', {
-        key: STORAGE_KEY,
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
+  /**
+   * Fetches all coffee entries from the API and pushes them into the
+   * BehaviorSubject cache.
+   *
+   * @returns Observable<void> that completes once the cache has been updated.
+   */
+  private loadAll(): Observable<void> {
+    return this.http.get<ApiResponse<CoffeeEntry[]>>(API_BASE).pipe(
+      map((response) => response.data),
+      tap((coffees) => this._coffees$.next(coffees)),
+      map(() => undefined),
+      catchError((err) => {
+        console.error('[CoffeeService] Failed to load coffees from API', err);
+        return EMPTY;
+      })
+    );
   }
 }

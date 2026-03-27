@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError, NEVER } from 'rxjs';
 import { CoffeeFormPageComponent } from './coffee-form-page.component';
 import { CoffeeService } from '../../services/coffee.service';
 import { CoffeeEntry } from '../../models/coffee.models';
@@ -16,6 +16,9 @@ const mockEntry: CoffeeEntry = {
   brewTimeSeconds: 32,
   notes: 'Nutty',
   rating: 4,
+  roastLevel: 'medium',
+  coffeeType: 'single-origin',
+  blendComponents: [],
   createdAt: '2024-01-01T00:00:00.000Z',
   updatedAt: '2024-01-01T00:00:00.000Z'
 };
@@ -109,7 +112,7 @@ describe('CoffeeFormPageComponent', () => {
     });
 
     it('submit calls addCoffee on valid form and navigates to /', () => {
-      mockCoffeeService.addCoffee.and.returnValue(mockEntry);
+      mockCoffeeService.addCoffee.and.returnValue(of(mockEntry));
       component.form.patchValue({
         name: 'New Coffee', grindLevel: 5, doseGrams: 18, brewTimeSeconds: 30
       });
@@ -122,6 +125,21 @@ describe('CoffeeFormPageComponent', () => {
       component.form.get('name')?.setValue('');
       component.onSubmit();
       expect(mockCoffeeService.addCoffee).not.toHaveBeenCalled();
+    });
+
+    it('sets submitting=true while the Observable is in flight', () => {
+      mockCoffeeService.addCoffee.and.returnValue(NEVER); // never completes
+      component.form.patchValue({ name: 'Test', grindLevel: 5, doseGrams: 18, brewTimeSeconds: 30 });
+      component.onSubmit();
+      expect(component.submitting).toBeTrue();
+    });
+
+    it('resets submitting=false and sets submitError on API error', () => {
+      mockCoffeeService.addCoffee.and.returnValue(throwError(() => new Error('Network error')));
+      component.form.patchValue({ name: 'Test', grindLevel: 5, doseGrams: 18, brewTimeSeconds: 30 });
+      component.onSubmit();
+      expect(component.submitting).toBeFalse();
+      expect(component.submitError).toBeTruthy();
     });
 
     it('cancel navigates to /', () => {
@@ -144,7 +162,7 @@ describe('CoffeeFormPageComponent', () => {
     });
 
     it('submit calls updateCoffee with id and navigates to /', () => {
-      mockCoffeeService.updateCoffee.and.returnValue(mockEntry);
+      mockCoffeeService.updateCoffee.and.returnValue(of(mockEntry));
       component.onSubmit();
       expect(mockCoffeeService.updateCoffee).toHaveBeenCalledWith('abc-123', jasmine.any(Object));
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/']);

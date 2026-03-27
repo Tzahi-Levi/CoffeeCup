@@ -11,11 +11,13 @@ const mockCoffees: CoffeeEntry[] = [
   {
     id: '1', name: 'Ethiopian', origin: 'Ethiopia', grindLevel: 7,
     doseGrams: 18, brewTimeSeconds: 28, notes: null, rating: 5,
+    roastLevel: 'light', coffeeType: 'single-origin', blendComponents: [],
     createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: '2', name: 'Brazilian', origin: 'Brazil', grindLevel: 5,
     doseGrams: 19, brewTimeSeconds: 32, notes: 'Nutty', rating: 3,
+    roastLevel: 'medium', coffeeType: 'single-origin', blendComponents: [],
     createdAt: '2024-01-02T00:00:00.000Z', updatedAt: '2024-01-02T00:00:00.000Z'
   }
 ];
@@ -30,7 +32,12 @@ describe('LibraryPageComponent', () => {
 
   beforeEach(async () => {
     coffeeSubject = new BehaviorSubject<CoffeeEntry[]>(mockCoffees);
-    mockCoffeeService = jasmine.createSpyObj('CoffeeService', ['filteredCoffees$', 'deleteCoffee']);
+    mockCoffeeService = jasmine.createSpyObj(
+      'CoffeeService',
+      ['filteredCoffees$', 'deleteCoffee'],
+      { coffees$: coffeeSubject.asObservable() }
+    );
+    mockCoffeeService.deleteCoffee.and.returnValue(of(undefined));
     mockSearchService = jasmine.createSpyObj('SearchService', ['setQuery'], { query$: of('') });
     mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 

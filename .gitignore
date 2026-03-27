@@ -8,10 +8,15 @@ frontend/dist/
 frontend/.angular/
 backend/dist/
 
-# Environment
+# Environment / secrets
 .env
+backend/.env
+*.env
 .env.local
 .env.*.local
+
+# Local SQLite dev database
+*.db
 
 # Logs
 *.log
