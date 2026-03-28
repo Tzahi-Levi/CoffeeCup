@@ -26,8 +26,10 @@
       }
 
       <div class="mc-history-list">
-        @for (entry of vm.historyEntries; track entry.id; let last = $last) {
-          <div class="mc-history-row" [class.mc-history-row--last]="last">
+        @for (entry of (showAllHistory ? vm.historyEntries : vm.historyEntries.slice(0, HISTORY_PREVIEW)); track entry.id; let i = $index; let last = $last) {
+          <div class="mc-history-row"
+               [class.mc-history-row--last]="last && (showAllHistory || vm.historyEntries.length <= HISTORY_PREVIEW)"
+               [class.mc-history-row--new]="!showAllHistory || i < HISTORY_PREVIEW">
             <div class="mc-history-row__icon" [class]="'mc-history-row__icon--' + entry.status">
               <span>{{ entry.icon }}</span>
             </div>
@@ -44,6 +46,18 @@
           </div>
         }
       </div>
+
+      @if (vm.historyEntries.length > HISTORY_PREVIEW) {
+        <button class="mc-history-expand" (click)="showAllHistory = !showAllHistory">
+          @if (!showAllHistory) {
+            <span>View all {{ vm.historyEntries.length }} services</span>
+            <span class="mc-history-expand__arrow">↓</span>
+          } @else {
+            <span>Show less</span>
+            <span class="mc-history-expand__arrow mc-history-expand__arrow--up">↑</span>
+          }
+        </button>
+      }
     </div>
 
     <!-- Total Usage Card -->

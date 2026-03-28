@@ -30,6 +30,8 @@ export class MaintenancePageComponent implements OnInit {
 
   showAddForm = false;
   editingTaskId: string | null = null;
+  showAllHistory = false;
+  readonly HISTORY_PREVIEW = 5;
   addForm!: FormGroup;
   shotEditMode = false;
   shotEditValue = 0;
