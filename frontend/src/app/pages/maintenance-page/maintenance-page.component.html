@@ -1,0 +1,145 @@
+@if (vm$ | async; as vm) {
+  <div class="maintenance-page">
+
+    <!-- Page Header -->
+    <header class="maintenance-page__header">
+      <h2 class="maintenance-page__title">🔧 Maintenance Concierge</h2>
+      <p class="maintenance-page__subtitle">Track your espresso machine upkeep</p>
+    </header>
+
+    <!-- Shot Counter Widget -->
+    <section class="shot-counter">
+      <p class="shot-counter__label">Total Shots Pulled</p>
+      <div class="shot-counter__controls">
+        <button class="shot-counter__btn" (click)="decrement(vm.totalShots)" [disabled]="vm.totalShots <= 0">−</button>
+
+        @if (shotEditMode) {
+          <input
+            class="shot-counter__input"
+            type="number"
+            [(ngModel)]="shotEditValue"
+            min="0"
+            (blur)="commitShotEdit()"
+            (keydown)="onShotEditKeydown($event, vm.totalShots)"
+            autofocus
+          />
+        } @else {
+          <span class="shot-counter__value" (click)="startShotEdit(vm.totalShots)" title="Click to edit">
+            {{ vm.totalShots }}
+          </span>
+        }
+
+        <button class="shot-counter__btn" (click)="increment(vm.totalShots)">+</button>
+      </div>
+      <p class="shot-counter__hint">Click the number to set manually</p>
+    </section>
+
+    <!-- Alerts Strip -->
+    @if (vm.overdueCount > 0 || vm.dueSoonCount > 0) {
+      <div class="alerts-strip">
+        @if (vm.overdueCount > 0) {
+          <span class="alerts-strip__pill alerts-strip__pill--overdue">
+            🔴 {{ vm.overdueCount }} overdue
+          </span>
+        }
+        @if (vm.dueSoonCount > 0) {
+          <span class="alerts-strip__pill alerts-strip__pill--due-soon">
+            ⚠️ {{ vm.dueSoonCount }} due soon
+          </span>
+        }
+      </div>
+    }
+
+    <!-- Maintenance Roadmap -->
+    <section class="roadmap">
+      <h3 class="roadmap__heading">Maintenance Tasks</h3>
+      <div class="roadmap__scroll">
+        @for (task of vm.tasks; track trackById($index, task)) {
+          <app-maintenance-task-card
+            [task]="task"
+            (complete)="completeTask(task.id)"
+            (edit)="openEditForm(task)"
+            (delete)="deleteTask(task.id)"
+          />
+        } @empty {
+          <p class="roadmap__empty">No maintenance tasks yet.</p>
+        }
+      </div>
+    </section>
+
+    <!-- Add Task Button -->
+    @if (!showAddForm) {
+      <button class="add-task-btn" (click)="openAddForm()">+ Add Custom Task</button>
+    }
+
+    <!-- Add / Edit Task Form -->
+    @if (showAddForm) {
+      <section class="task-form" [formGroup]="addForm">
+        <h3 class="task-form__title">{{ editingTaskId ? 'Edit Task' : 'New Task' }}</h3>
+
+        <div class="task-form__field">
+          <label class="task-form__label" for="task-name">Name</label>
+          <input
+            id="task-name"
+            class="task-form__input"
+            type="text"
+            formControlName="name"
+            placeholder="e.g. Group Head Cleaning"
+            maxlength="60"
+          />
+        </div>
+
+        <div class="task-form__field">
+          <label class="task-form__label">Icon</label>
+          <div class="task-form__icon-grid">
+            @for (icon of iconOptions; track icon) {
+              <button
+                type="button"
+                class="task-form__icon-btn"
+                [class.task-form__icon-btn--selected]="addForm.value.icon === icon"
+                (click)="selectIcon(icon)"
+              >{{ icon }}</button>
+            }
+          </div>
+        </div>
+
+        <div class="task-form__row">
+          <div class="task-form__field">
+            <label class="task-form__label">Interval Type</label>
+            <div class="task-form__toggle">
+              @for (type of intervalTypes; track type) {
+                <button
+                  type="button"
+                  class="task-form__toggle-btn"
+                  [class.task-form__toggle-btn--active]="addForm.value.intervalType === type"
+                  (click)="addForm.patchValue({ intervalType: type })"
+                >{{ type }}</button>
+              }
+            </div>
+          </div>
+
+          <div class="task-form__field">
+            <label class="task-form__label" for="task-interval">
+              Every {{ addForm.value.intervalType === 'shots' ? 'shots' : 'days' }}
+            </label>
+            <input
+              id="task-interval"
+              class="task-form__input task-form__input--short"
+              type="number"
+              formControlName="intervalValue"
+              min="1"
+            />
+          </div>
+        </div>
+
+        <div class="task-form__actions">
+          <button type="button" class="task-form__btn task-form__btn--cancel" (click)="cancelForm()">Cancel</button>
+          <button type="button" class="task-form__btn task-form__btn--save" (click)="submitForm()" [disabled]="addForm.invalid">
+            {{ editingTaskId ? 'Save Changes' : 'Add Task' }}
+          </button>
+        </div>
+      </section>
+    }
+
+  </div>
+}

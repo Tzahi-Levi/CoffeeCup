@@ -1,0 +1,385 @@
+.maintenance-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  &__title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+}
+
+// Shot Counter
+.shot-counter {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+
+  &__label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0;
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+  }
+
+  &__btn {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: 2px solid var(--color-accent);
+    background: transparent;
+    color: var(--color-accent);
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+    font-family: var(--font-family-primary);
+    line-height: 1;
+
+    &:hover:not(:disabled) {
+      background: var(--color-accent);
+      color: #1a0a00;
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+  }
+
+  &__value {
+    font-size: 3.5rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    min-width: 4rem;
+    text-align: center;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover {
+      color: var(--color-accent);
+    }
+  }
+
+  &__input {
+    font-size: 3rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    background: var(--color-surface-elevated);
+    border: 2px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    width: 6rem;
+    text-align: center;
+    outline: none;
+    font-family: var(--font-family-primary);
+    padding: 0 var(--space-2);
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      opacity: 0;
+    }
+  }
+
+  &__hint {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+}
+
+// Alerts Strip
+.alerts-strip {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+
+    &--overdue {
+      background: rgba(220, 53, 69, 0.15);
+      color: #f06070;
+      border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    &--due-soon {
+      background: rgba(212, 134, 11, 0.15);
+      color: var(--color-accent);
+      border: 1px solid rgba(212, 134, 11, 0.3);
+    }
+  }
+}
+
+// Roadmap
+.roadmap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  &__heading {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__scroll {
+    display: flex;
+    gap: var(--space-4);
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+
+    // Smooth scroll snap
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+
+    app-maintenance-task-card {
+      scroll-snap-align: start;
+    }
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--color-surface);
+      border-radius: 2px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-border-subtle);
+      border-radius: 2px;
+    }
+  }
+
+  &__empty {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    margin: 0;
+    padding: var(--space-4);
+  }
+}
+
+// Add Task Button
+.add-task-btn {
+  align-self: flex-start;
+  padding: var(--space-3) var(--space-5);
+  background: rgba(212, 134, 11, 0.1);
+  border: 1px dashed rgba(212, 134, 11, 0.4);
+  border-radius: var(--radius-lg);
+  color: var(--color-accent);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(212, 134, 11, 0.18);
+    border-color: var(--color-accent);
+  }
+}
+
+// Task Form
+.task-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: slideDown 0.2s ease;
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  &__title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__input {
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-sm);
+    padding: var(--space-3) var(--space-4);
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: var(--color-accent);
+    }
+
+    &--short {
+      width: 6rem;
+    }
+  }
+
+  &__row {
+    display: flex;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+  }
+
+  &__icon-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  &__icon-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    background: var(--color-surface-elevated);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s ease;
+
+    &--selected {
+      border-color: var(--color-accent);
+    }
+
+    &:hover {
+      border-color: rgba(212, 134, 11, 0.5);
+    }
+  }
+
+  &__toggle {
+    display: flex;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--color-border-subtle);
+    width: fit-content;
+  }
+
+  &__toggle-btn {
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-elevated);
+    border: none;
+    color: var(--color-text-secondary);
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    text-transform: capitalize;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &--active {
+      background: var(--color-accent);
+      color: #1a0a00;
+      font-weight: var(--font-weight-semibold);
+    }
+
+    &:not(&--active):hover {
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: flex-end;
+  }
+
+  &__btn {
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &--cancel {
+      background: var(--color-surface-elevated);
+      color: var(--color-text-secondary);
+
+      &:hover {
+        color: var(--color-text-primary);
+      }
+    }
+
+    &--save {
+      background: var(--color-accent);
+      color: #1a0a00;
+
+      &:hover:not(:disabled) {
+        background: var(--color-accent-hover);
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+    }
+  }
+}
