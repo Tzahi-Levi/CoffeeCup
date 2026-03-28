@@ -1,23 +1,17 @@
-@if (coffees.length === 0 && !showAddCard) {
+@if (coffees.length === 0) {
   <div class="card-grid__empty">
     <span class="card-grid__empty-icon">☕</span>
     <h3 class="card-grid__empty-title">No coffees yet</h3>
-    <p class="card-grid__empty-subtitle">Add your first brew using the button above</p>
+    <p class="card-grid__empty-subtitle">Add your first brew using the + button</p>
   </div>
 } @else {
-  <div class="card-grid" [class.card-grid--list]="viewMode === 'list'" [@listAnimation]="coffees.length">
+  <div class="card-grid" [@listAnimation]="coffees.length">
     @for (coffee of coffees; track coffee.id) {
       <app-coffee-card
         [coffee]="coffee"
         (edit)="edit.emit(coffee.id)"
         (delete)="delete.emit(coffee.id)"
       />
-    }
-    @if (showAddCard && viewMode === 'grid') {
-      <a routerLink="/add" class="card-grid__new-card" aria-label="Add new coffee entry">
-        <span class="card-grid__new-icon">+</span>
-        <span class="card-grid__new-label">New Entry</span>
-      </a>
     }
   </div>
 }

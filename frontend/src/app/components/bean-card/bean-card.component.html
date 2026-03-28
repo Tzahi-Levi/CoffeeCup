@@ -1,0 +1,40 @@
+<article class="bean-card">
+  <div class="bean-card__image" [ngClass]="gradientClass">
+    <button type="button" class="bean-card__heart" aria-label="Favorite" (click)="$event.stopPropagation()">♡</button>
+    @if (bean.roastLevel) {
+      <span class="bean-card__roast-badge">{{ roastLevelLabel }}</span>
+    }
+  </div>
+
+  <div class="bean-card__body">
+    <h2 class="bean-card__name">{{ bean.name }}</h2>
+
+    @if (bean.origin) {
+      <p class="bean-card__origin">{{ bean.origin }}</p>
+    }
+
+    @if (bean.flavorNotes.length) {
+      <div class="bean-card__flavor-tags">
+        @for (tag of bean.flavorNotes; track tag) {
+          <span class="bean-card__flavor-tag">{{ tag }}</span>
+        }
+      </div>
+    }
+
+    @if (bean.bagWeightGrams) {
+      <span class="bean-card__weight-badge">{{ bean.bagWeightGrams }}g</span>
+    }
+
+    <div class="bean-card__footer">
+      <span class="bean-card__meta-text">
+        @if (bean.roastedAt) {
+          {{ roastedAtFormatted }} · {{ daysAgoRoasted }}d ago
+        }
+      </span>
+      <div class="bean-card__footer-actions">
+        <button type="button" class="bean-card__action-btn" aria-label="Edit bean" title="Edit" (click)="edit.emit()">→</button>
+        <button type="button" class="bean-card__action-btn bean-card__action-btn--delete" aria-label="Delete bean" title="Delete" (click)="delete.emit()">✕</button>
+      </div>
+    </div>
+  </div>
+</article>

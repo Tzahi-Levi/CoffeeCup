@@ -26,6 +26,30 @@ export const routes: Routes = [
     data: { animation: 'FormPage' }
   },
   {
+    path: 'beans',
+    loadComponent: () =>
+      import('./components/bean-journal-page/bean-journal-page.component').then(
+        (m) => m.BeanJournalPageComponent
+      ),
+    data: { animation: 'BeansPage' }
+  },
+  {
+    path: 'beans/add',
+    loadComponent: () =>
+      import('./components/bean-form-page/bean-form-page.component').then(
+        (m) => m.BeanFormPageComponent
+      ),
+    data: { animation: 'FormPage' }
+  },
+  {
+    path: 'beans/edit/:id',
+    loadComponent: () =>
+      import('./components/bean-form-page/bean-form-page.component').then(
+        (m) => m.BeanFormPageComponent
+      ),
+    data: { animation: 'FormPage' }
+  },
+  {
     path: '**',
     redirectTo: ''
   }

@@ -1,153 +1,146 @@
 .coffee-card {
-  background: var(--color-surface-card);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-card);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  transition:
-    transform var(--transition-slow),
-    box-shadow var(--transition-slow);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
+  gap: var(--space-3);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 
   &:hover {
-    transform: translateY(-3px);
+    border-color: var(--color-border-hover);
     box-shadow: var(--shadow-raised);
   }
 
-  // Gradient image placeholder
-  &__image {
-    height: 140px;
-    position: relative;
-    flex-shrink: 0;
-  }
-
-  &__heart {
-    position: absolute;
-    top: var(--space-3);
-    right: var(--space-3);
-    background: rgba(255, 255, 255, 0.18);
-    border: none;
-    border-radius: var(--border-radius-full);
-    width: 32px;
-    height: 32px;
+  &__header {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.75);
-    transition: all var(--transition-fast);
-    line-height: 1;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.3);
-      color: #fff;
-    }
-  }
-
-  &__roast-badge {
-    position: absolute;
-    bottom: var(--space-3);
-    left: var(--space-3);
-    padding: 2px var(--space-3);
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(4px);
-    border-radius: var(--border-radius-full);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    color: rgba(255, 255, 255, 0.9);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  &__body {
-    padding: var(--space-4);
-    display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
     gap: var(--space-2);
-    flex: 1;
-    background: var(--color-surface-card);
   }
 
-  &__type-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px var(--space-3);
-    background: var(--color-accent-muted);
-    color: var(--color-accent);
-    border-radius: var(--border-radius-full);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    align-self: flex-start;
+  &__header-left {
+    min-width: 0;
+    flex: 1;
   }
 
   &__name {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
-    color: var(--color-text-on-card);
+    color: var(--color-text-primary);
     margin: 0;
     line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__origin {
     font-size: var(--font-size-sm);
-    color: var(--color-text-on-card-secondary);
-    margin: 0;
+    color: var(--color-text-secondary);
+    margin: var(--space-1) 0 0;
     font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  &__flavor-tags {
+  &__badges {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: var(--space-1);
-    margin-top: var(--space-1);
+    align-items: flex-end;
+    flex-shrink: 0;
   }
 
-  &__flavor-tag {
+  &__badge {
     padding: 2px var(--space-2);
-    background: var(--color-surface-mid);
-    color: var(--color-text-on-card-secondary);
+    background: var(--color-bg-elevated);
+    color: var(--color-text-secondary);
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
+    text-transform: capitalize;
+    white-space: nowrap;
+
+    &--roast {
+      background: var(--color-accent-muted);
+      color: var(--color-accent);
+    }
   }
 
-  &__footer {
+  &__stats {
+    display: flex;
+    gap: var(--space-4);
+    background: var(--color-bg-elevated);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  &__stat-value {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+
+  &__stat-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__blend {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  &__rating {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-top: auto;
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--color-surface-mid);
   }
 
-  &__meta-text {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-on-card-secondary);
+  &__notes {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.5;
   }
 
-  &__footer-actions {
+  &__actions {
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-2);
+    justify-content: flex-end;
+    margin-top: auto;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border-subtle);
   }
 
-  &__action-btn {
+  &__btn {
     background: none;
-    border: 1px solid transparent;
-    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--border-color);
+    padding: var(--space-1) var(--space-3);
     border-radius: var(--border-radius-md);
     cursor: pointer;
     font-size: var(--font-size-sm);
-    color: var(--color-text-on-card-secondary);
+    color: var(--color-text-secondary);
+    font-family: var(--font-family-primary);
     transition: all var(--transition-fast);
-    line-height: 1;
 
     &:hover {
-      background: var(--color-accent-muted);
-      border-color: var(--border-color-accent);
-      color: var(--color-accent);
+      background: var(--color-bg-elevated);
+      border-color: var(--color-border-hover);
+      color: var(--color-text-primary);
     }
 
     &--delete:hover {

@@ -1,0 +1,125 @@
+<div class="bean-journal-page">
+
+  <!-- Page Header -->
+  <div class="bean-journal-page__header">
+    <h1 class="bean-journal-page__title">Bean Journal</h1>
+    <a routerLink="/beans/add" class="bean-journal-page__add-btn">+ Add New Bean</a>
+  </div>
+
+  @if (loading) {
+    <div class="bean-journal-page__loading" aria-live="polite">
+      <div class="bean-journal-page__spinner" role="status" aria-label="Loading beans"></div>
+      <p class="bean-journal-page__loading-text">Loading your beans...</p>
+    </div>
+  } @else {
+    <div class="bean-journal-page__content">
+
+      <!-- Main column -->
+      <div class="bean-journal-page__main">
+
+        <!-- Hero: Featured Bean -->
+        @if (featuredBean$ | async; as featured) {
+          <section class="bean-journal-page__hero" aria-label="Featured bean">
+            <div class="hero-card" [ngClass]="getGradientClass(featured.id)">
+              <div class="hero-card__overlay">
+                <div class="hero-card__badges">
+                  @if (featured.roastLevel) {
+                    <span class="hero-card__badge">{{ featured.roastLevel }}</span>
+                  }
+                  <span class="hero-card__badge hero-card__badge--featured">🫘 Featured</span>
+                </div>
+                <div class="hero-card__info">
+                  <h2 class="hero-card__name">{{ featured.name }}</h2>
+                  @if (featured.origin) {
+                    <p class="hero-card__origin">{{ featured.origin }}</p>
+                  }
+                  @if (featured.roastedAt) {
+                    <p class="hero-card__roasted">
+                      Roasted {{ getDaysAgoRoasted(featured.roastedAt) }} days ago
+                    </p>
+                  }
+                </div>
+              </div>
+            </div>
+          </section>
+        }
+
+        <!-- My Beans Collection -->
+        <section class="bean-journal-page__collection">
+          <div class="collection-header">
+            <div class="collection-header__left">
+              <h2 class="collection-header__title">My Beans</h2>
+              <span class="collection-header__count">
+                {{ (totalBags$ | async) ?? 0 }} bags
+              </span>
+            </div>
+          </div>
+
+          @if ((beans$ | async)?.length === 0) {
+            <div class="bean-journal-page__empty">
+              <span class="bean-journal-page__empty-icon">🫘</span>
+              <h3 class="bean-journal-page__empty-title">No beans yet</h3>
+              <p class="bean-journal-page__empty-subtitle">Add your first bag using the button above</p>
+            </div>
+          } @else {
+            <div class="bean-journal-page__grid">
+              @for (bean of (beans$ | async) ?? []; track bean.id) {
+                <app-bean-card
+                  [bean]="bean"
+                  (edit)="onEdit(bean.id)"
+                  (delete)="onDeleteRequest(bean.id)"
+                />
+              }
+            </div>
+          }
+        </section>
+      </div>
+
+      <!-- Right Widgets Aside -->
+      <aside class="bean-journal-page__aside">
+
+        <!-- Journal Stats -->
+        <div class="widget-card">
+          <h3 class="widget-card__title">Journal Stats</h3>
+          <div class="widget-card__stats">
+            <div class="widget-stat">
+              <span class="widget-stat__value">{{ (totalBags$ | async) ?? 0 }}</span>
+              <span class="widget-stat__label">Active Bags</span>
+            </div>
+            <div class="widget-stat">
+              <span class="widget-stat__value">{{ topOrigin$ | async }}</span>
+              <span class="widget-stat__label">Top Origin</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Degassing Reminder -->
+        <div class="widget-card">
+          <h3 class="widget-card__title">Degassing Reminder</h3>
+          @if (degassingReminder$ | async; as reminder) {
+            <div class="degassing-reminder">
+              <div class="degassing-reminder__icon">⏱</div>
+              <p class="degassing-reminder__text">
+                <strong>{{ reminder.beanName }}</strong> peaks in
+                {{ reminder.daysUntilPeak }}
+                {{ reminder.daysUntilPeak === 1 ? 'day' : 'days' }}
+              </p>
+            </div>
+          } @else {
+            <p class="widget-card__empty">Add a roast date to track when your beans reach peak flavor.</p>
+          }
+        </div>
+
+      </aside>
+    </div>
+  }
+
+  @if (pendingDeleteId) {
+    <app-confirm-dialog
+      message="Delete this bean entry? This cannot be undone."
+      (confirmed)="onDeleteConfirmed()"
+      (cancelled)="onDeleteCancelled()"
+    />
+  }
+
+</div>

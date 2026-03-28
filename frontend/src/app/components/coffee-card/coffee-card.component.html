@@ -1,59 +1,52 @@
 <article class="coffee-card">
-  <div class="coffee-card__image" [ngClass]="gradientClass">
-    <button
-      type="button"
-      class="coffee-card__heart"
-      aria-label="Favorite"
-      (click)="$event.stopPropagation()"
-    >♡</button>
-    @if (coffee.roastLevel) {
-      <span class="coffee-card__roast-badge">{{ roastLevelLabel }}</span>
-    }
+  <div class="coffee-card__header">
+    <div class="coffee-card__header-left">
+      <h2 class="coffee-card__name">{{ coffee.name }}</h2>
+      @if (coffee.origin) {
+        <p class="coffee-card__origin">{{ coffee.origin }}</p>
+      }
+    </div>
+    <div class="coffee-card__badges">
+      @if (coffee.coffeeType) {
+        <span class="coffee-card__badge">{{ coffeeTypeLabel }}</span>
+      }
+      @if (coffee.roastLevel) {
+        <span class="coffee-card__badge coffee-card__badge--roast">{{ roastLevelLabel }}</span>
+      }
+    </div>
   </div>
 
-  <div class="coffee-card__body">
-    @if (coffee.coffeeType) {
-      <span class="coffee-card__type-badge">{{ coffeeTypeLabel }}</span>
-    }
-
-    <h2 class="coffee-card__name">{{ coffee.name }}</h2>
-
-    @if (coffee.origin) {
-      <p class="coffee-card__origin">{{ coffee.origin }}</p>
-    }
-
-    @if (coffee.flavorNotes.length) {
-      <div class="coffee-card__flavor-tags">
-        @for (tag of coffee.flavorNotes; track tag) {
-          <span class="coffee-card__flavor-tag">{{ tag }}</span>
-        }
-      </div>
-    }
-
-    <div class="coffee-card__footer">
-      <span class="coffee-card__meta-text">
-        @if (coffee.roastedAt) {
-          Roast: {{ roastedAtFormatted }}
-        } @else {
-          Grind: {{ coffee.grindLevel }}/30
-        }
-      </span>
-      <div class="coffee-card__footer-actions">
-        <button
-          type="button"
-          class="coffee-card__action-btn"
-          aria-label="Edit coffee"
-          title="Edit"
-          (click)="edit.emit()"
-        >→</button>
-        <button
-          type="button"
-          class="coffee-card__action-btn coffee-card__action-btn--delete"
-          aria-label="Delete coffee"
-          title="Delete"
-          (click)="delete.emit()"
-        >✕</button>
-      </div>
+  <div class="coffee-card__stats">
+    <div class="coffee-card__stat">
+      <span class="coffee-card__stat-value">{{ coffee.grindLevel }}</span>
+      <span class="coffee-card__stat-label">Grind</span>
     </div>
+    <div class="coffee-card__stat">
+      <span class="coffee-card__stat-value">{{ coffee.doseGrams }}g</span>
+      <span class="coffee-card__stat-label">Dose</span>
+    </div>
+    <div class="coffee-card__stat">
+      <span class="coffee-card__stat-value">{{ coffee.brewTimeSeconds }}s</span>
+      <span class="coffee-card__stat-label">Brew</span>
+    </div>
+  </div>
+
+  @if (coffee.blendComponents?.length) {
+    <p class="coffee-card__blend">{{ blendBreakdown }}</p>
+  }
+
+  @if (coffee.rating) {
+    <div class="coffee-card__rating">
+      <app-star-rating [rating]="coffee.rating" [readonly]="true" />
+    </div>
+  }
+
+  @if (coffee.notes) {
+    <p class="coffee-card__notes">{{ truncatedNotes }}</p>
+  }
+
+  <div class="coffee-card__actions">
+    <button type="button" class="coffee-card__btn" (click)="edit.emit()">Edit</button>
+    <button type="button" class="coffee-card__btn coffee-card__btn--delete" (click)="delete.emit()">Delete</button>
   </div>
 </article>

@@ -138,14 +138,6 @@
         <textarea formControlName="notes" rows="4" placeholder="Describe the flavor profile, aroma, aftertaste..."></textarea>
       </app-form-field>
 
-      <app-form-field label="Flavor Notes" [errorMessage]="getError('flavorNotes')">
-        <input type="text" formControlName="flavorNotes" placeholder="e.g. Nutty, Dark Chocolate, Citrus" />
-      </app-form-field>
-
-      <app-form-field label="Roast Date" [errorMessage]="''">
-        <input type="date" formControlName="roastedAt" />
-      </app-form-field>
-
       @if (submitError) {
         <p class="form-page__submit-error">{{ submitError }}</p>
       }

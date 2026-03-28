@@ -9,14 +9,6 @@ export const db: Client = createClient({
   authToken: process.env['TURSO_AUTH_TOKEN'],
 });
 
-async function addColumnIfNotExists(columnName: string, columnDef: string): Promise<void> {
-  try {
-    await db.execute(`ALTER TABLE coffee_entries ADD COLUMN ${columnName} ${columnDef}`);
-  } catch {
-    // Column already exists — ignore
-  }
-}
-
 export async function initDb(): Promise<void> {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS coffee_entries (
@@ -43,6 +35,18 @@ export async function initDb(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_coffee_entries_name
     ON coffee_entries (name)
   `);
-  await addColumnIfNotExists('flavor_notes', "TEXT DEFAULT '[]'");
-  await addColumnIfNotExists('roasted_at', 'TEXT');
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS bean_entries (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      origin TEXT,
+      roast_level TEXT,
+      roasted_at TEXT,
+      flavor_notes TEXT DEFAULT '[]',
+      bag_weight_grams REAL,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `);
 }
