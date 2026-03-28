@@ -10,34 +10,39 @@
   <!-- ── Top row ── -->
   <div class="mc-top">
 
-    <!-- Health Index Card -->
-    <div class="mc-card mc-card--health">
-      <span class="mc-badge" [class.mc-badge--ok]="vm.healthIndex >= 80" [class.mc-badge--warn]="vm.healthIndex < 80 && vm.healthIndex >= 50" [class.mc-badge--crit]="vm.healthIndex < 50">
-        <span class="mc-badge__dot"></span>{{ systemStatus(vm.healthIndex) }}
-      </span>
-      <p class="mc-health-index">{{ vm.healthIndex }}<span class="mc-health-index__pct">%</span> Health Index</p>
-      <div class="mc-stats">
-        <div class="mc-stat">
-          <span class="mc-stat__label">Tasks</span>
-          <span class="mc-stat__value">{{ vm.tasks.length }}</span>
-        </div>
-        <div class="mc-stat">
-          <span class="mc-stat__label">Overdue</span>
-          <span class="mc-stat__value mc-stat__value--alert">{{ vm.overdueCount }}</span>
-        </div>
-        <div class="mc-stat">
-          <span class="mc-stat__label">Due Soon</span>
-          <span class="mc-stat__value mc-stat__value--warn">{{ vm.dueSoonCount }}</span>
-        </div>
+    <!-- Service History Log -->
+    <div class="mc-card mc-card--history">
+      <div class="mc-history-header">
+        <h3 class="mc-history-title">
+          <span class="mc-history-title__icon">🕐</span> Service History Log
+        </h3>
       </div>
-      <div class="mc-card__chart-icon" aria-hidden="true">
-        <svg viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="0"  y="20" width="8"  height="16" rx="2" fill="currentColor" opacity="0.3"/>
-          <rect x="10" y="12" width="8"  height="24" rx="2" fill="currentColor" opacity="0.5"/>
-          <rect x="20" y="4"  width="8"  height="32" rx="2" fill="currentColor" opacity="0.7"/>
-          <rect x="30" y="14" width="8"  height="22" rx="2" fill="currentColor" opacity="0.5"/>
-          <rect x="40" y="8"  width="8"  height="28" rx="2" fill="currentColor" opacity="0.4"/>
-        </svg>
+
+      @if (vm.historyEntries.length === 0) {
+        <div class="mc-history-empty">
+          <p class="mc-history-empty__line">No services logged yet.</p>
+          <p class="mc-history-empty__sub">Mark a ritual as done and it will appear here.</p>
+        </div>
+      }
+
+      <div class="mc-history-list">
+        @for (entry of vm.historyEntries; track entry.id; let last = $last) {
+          <div class="mc-history-row" [class.mc-history-row--last]="last">
+            <div class="mc-history-row__icon" [class]="'mc-history-row__icon--' + entry.status">
+              <span>{{ entry.icon }}</span>
+            </div>
+            <div class="mc-history-row__body">
+              <p class="mc-history-row__name">{{ entry.name }}</p>
+              <p class="mc-history-row__sub">{{ historySubtitle(entry) }}</p>
+            </div>
+            <div class="mc-history-row__meta">
+              <span class="mc-history-row__date">{{ formatHistoryDate(entry.lastCompletedAt!) }}</span>
+              <span class="mc-history-row__status" [class]="'mc-history-row__status--' + entry.status">
+                {{ historyStatusLabel(entry) }}
+              </span>
+            </div>
+          </div>
+        }
       </div>
     </div>
 
