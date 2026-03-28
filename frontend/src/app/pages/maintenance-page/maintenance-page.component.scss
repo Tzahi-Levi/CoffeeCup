@@ -77,93 +77,160 @@
   }
 }
 
-// ─── Health Index Card ─────────────────────────────────────────────────────
-.mc-card--health {
+// ─── Service History Log ───────────────────────────────────────────────────
+.mc-card--history {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 0;
+  overflow: hidden; // clip bottom border of last row
 }
 
-.mc-badge {
-  display: inline-flex;
+.mc-history-header {
+  display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: 0.65rem;
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: var(--border-radius-full);
-  width: fit-content;
-
-  &__dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    animation: mc-pulse 2s ease-in-out infinite;
-  }
-
-  &--ok    { background: rgba(58,140,92,0.18);  color: #5dba89; .mc-badge__dot { background: #5dba89; } }
-  &--warn  { background: rgba(232,71,42,0.15);  color: var(--color-accent-bright); .mc-badge__dot { background: var(--color-accent-bright); } }
-  &--crit  { background: rgba(192,57,43,0.2);   color: #e05555; .mc-badge__dot { background: #e05555; } }
+  justify-content: space-between;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-color-subtle);
+  margin-bottom: var(--space-2);
 }
 
-@keyframes mc-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
-
-.mc-health-index {
-  font-size: clamp(2rem, 5vw, 3rem);
+.mc-history-title {
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
   margin: 0;
-  letter-spacing: -0.04em;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 
-  &__pct {
-    font-size: 0.5em;
+  &__icon { font-size: 1rem; }
+}
+
+.mc-history-empty {
+  padding: var(--space-6) 0 var(--space-4);
+
+  &__line {
+    font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
-    margin-right: 0.15em;
+    margin: 0 0 var(--space-1);
+    font-weight: var(--font-weight-medium);
   }
-}
 
-.mc-stats {
-  display: flex;
-  gap: var(--space-8);
-  flex-wrap: wrap;
-}
-
-.mc-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  &__label {
+  &__sub {
     font-size: var(--font-size-xs);
     color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-  }
-
-  &__value {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-
-    &--alert { color: var(--color-accent-bright); }
-    &--warn  { color: #f0a020; }
+    margin: 0;
   }
 }
 
-.mc-card__chart-icon {
-  position: absolute;
-  right: var(--space-6);
-  bottom: var(--space-6);
-  width: 80px;
-  opacity: 0.12;
-  color: var(--color-text-primary);
-  pointer-events: none;
+.mc-history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mc-history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border-color-subtle);
+  transition: background var(--transition-fast);
+  border-radius: var(--border-radius-md);
+  animation: mc-row-in 0.25s ease both;
+
+  &--last { border-bottom: none; }
+
+  &:hover {
+    background: rgba(240, 244, 250, 0.03);
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    margin: 0 calc(-1 * var(--space-2));
+  }
+
+  // Staggered fade-in
+  @for $i from 1 through 10 {
+    &:nth-child(#{$i}) { animation-delay: #{($i - 1) * 0.05}s; }
+  }
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    border: 2px solid transparent;
+
+    &--ok {
+      background: rgba(58,140,92,0.15);
+      border-color: rgba(58,140,92,0.35);
+    }
+
+    &--due-soon {
+      background: rgba(240,160,32,0.12);
+      border-color: rgba(240,160,32,0.3);
+    }
+
+    &--overdue {
+      background: rgba(232,71,42,0.12);
+      border-color: rgba(232,71,42,0.3);
+    }
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__sub {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  &__date {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+
+  &__status {
+    font-size: 0.6rem;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+
+    &--ok       { color: #4caf82; }
+    &--due-soon { color: #f0a020; }
+    &--overdue  { color: var(--color-accent-bright); }
+  }
+}
+
+@keyframes mc-row-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 // ─── Total Shots Card ──────────────────────────────────────────────────────

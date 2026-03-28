@@ -10,6 +10,7 @@ const ICON_OPTIONS = ['🔄', '🧪', '⚙️', '🔧', '🫧', '🧹', '💧', 
 interface PageVm {
   tasks: MaintenanceTaskView[];
   alertTasks: MaintenanceTaskView[];
+  historyEntries: MaintenanceTaskView[];
   totalShots: number;
   overdueCount: number;
   dueSoonCount: number;
@@ -71,7 +72,11 @@ export class MaintenancePageComponent implements OnInit {
           ? `${nextShotsTask.shotsUntilNext} shots until next ${nextShotsTask.name.toLowerCase()}`
           : 'All shots-based tasks up to date';
 
-        return { tasks: views, alertTasks, totalShots: settings.totalShots, overdueCount, dueSoonCount, healthIndex, nextShotsLabel };
+        const historyEntries = [...views]
+          .filter(t => t.lastCompletedAt !== null)
+          .sort((a, b) => new Date(b.lastCompletedAt!).getTime() - new Date(a.lastCompletedAt!).getTime());
+
+        return { tasks: views, alertTasks, historyEntries, totalShots: settings.totalShots, overdueCount, dueSoonCount, healthIndex, nextShotsLabel };
       })
     );
 
@@ -170,6 +175,23 @@ export class MaintenancePageComponent implements OnInit {
     if (days === 1) return 'Yesterday';
     if (days < 30) return `${days} days ago`;
     return `${Math.floor(days / 30)}mo ago`;
+  }
+
+  formatHistoryDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+  }
+
+  historySubtitle(task: MaintenanceTaskView): string {
+    if (task.intervalType === 'shots' && task.lastCompletedShots != null) {
+      return `Shot #${task.lastCompletedShots.toLocaleString()} · Every ${task.intervalValue} shots`;
+    }
+    return `Every ${task.intervalValue} ${task.intervalType}`;
+  }
+
+  historyStatusLabel(task: MaintenanceTaskView): string {
+    if (task.status === 'ok') return 'COMPLETED';
+    if (task.status === 'due-soon') return 'DUE SOON';
+    return 'NEEDS SERVICE';
   }
 
   systemStatus(healthIndex: number): string {
