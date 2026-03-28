@@ -2,11 +2,6 @@
   "version": 2,
   "buildCommand": "npm install && cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist/coffeecup/browser",
-  "functions": {
-    "api/[...path].ts": {
-      "runtime": "@vercel/node@5"
-    }
-  },
   "rewrites": [
     {
       "source": "/((?!api/).*)",
