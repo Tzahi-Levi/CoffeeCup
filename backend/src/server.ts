@@ -5,6 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import { initDb } from './db';
 import coffeesRouter from './routes/coffees.router';
+import maintenanceRouter from './routes/maintenance.router';
 
 const app = express();
 const PORT = process.env['PORT'] ? Number(process.env['PORT']) : 3000;
@@ -35,6 +36,18 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 
+// Kick off DB init immediately and hold a reference to the promise.
+// Any request that arrives before init completes will await it here,
+// preventing "no such table" errors on cold starts.
+const dbReady = initDb().catch((err) => {
+  console.error(JSON.stringify({ level: 'error', message: 'DB init failed', error: String(err) }));
+});
+
+app.use(async (_req: Request, _res: Response, next: NextFunction) => {
+  await dbReady;
+  next();
+});
+
 // Log every request on Vercel so we can see what URL the function receives
 if (process.env['VERCEL']) {
   app.use((req: Request, _res: Response, next: NextFunction) => {
@@ -52,6 +65,8 @@ app.get('/health', (_req: Request, res: Response) => {
 // the /api prefix from req.url depending on how the function is invoked.
 app.use('/api/v1/coffees', coffeesRouter);
 app.use('/v1/coffees', coffeesRouter);
+app.use('/api/v1/maintenance', maintenanceRouter);
+app.use('/v1/maintenance', maintenanceRouter);
 
 // On Vercel, return a JSON 404 so we can inspect req.url in the browser Network tab.
 // Remove this once routing is confirmed working.
@@ -87,14 +102,9 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-// Initialize DB and start server (always init DB so the table exists on Vercel too)
-(async () => {
-  try {
-    await initDb();
-  } catch (err) {
-    console.error(JSON.stringify({ level: 'error', message: 'DB init failed', error: String(err) }));
-  }
-  if (!process.env['VERCEL']) {
+// Start local server (Vercel handles its own lifecycle)
+if (!process.env['VERCEL']) {
+  dbReady.then(() => {
     app.listen(PORT, () => {
       console.log(JSON.stringify({
         level: 'info',
@@ -105,7 +115,7 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
         timestamp: new Date().toISOString(),
       }));
     });
-  }
-})();
+  });
+}
 
 export default app;

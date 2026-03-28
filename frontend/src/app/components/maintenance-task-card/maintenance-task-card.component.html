@@ -1,0 +1,34 @@
+<article class="task-card" [class]="'task-card--' + task.status">
+  <div class="task-card__header">
+    <span class="task-card__icon">{{ task.icon }}</span>
+    <span class="task-card__name">{{ task.name }}</span>
+    @if (task.isPreset) {
+      <span class="task-card__lock" title="Built-in task">🔒</span>
+    }
+    <span class="task-card__badge" [class]="'task-card__badge--' + task.status">
+      @if (task.status === 'ok') { ✓ OK }
+      @if (task.status === 'due-soon') { ⚠️ Due Soon }
+      @if (task.status === 'overdue') { 🔴 Overdue }
+    </span>
+  </div>
+
+  <div class="task-card__progress-track">
+    <div
+      class="task-card__progress-fill"
+      [style.width.%]="progressCapped"
+      [class]="'task-card__progress-fill--' + task.status"
+    ></div>
+  </div>
+
+  <p class="task-card__sub-line">{{ subLine }}</p>
+
+  <div class="task-card__actions">
+    <button class="task-card__btn task-card__btn--complete" (click)="complete.emit()">
+      Mark Done ✓
+    </button>
+    <button class="task-card__btn task-card__btn--icon" (click)="edit.emit()" title="Edit">✏️</button>
+    @if (!task.isPreset) {
+      <button class="task-card__btn task-card__btn--icon task-card__btn--danger" (click)="delete.emit()" title="Delete">🗑️</button>
+    }
+  </div>
+</article>
