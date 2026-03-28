@@ -1,15 +1,11 @@
 .card-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-6);
-  padding: var(--space-6) var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
 
-  @media (min-width: 640px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr);
+  &--list {
+    grid-template-columns: 1fr;
+    max-width: 600px;
   }
 
   &__empty {
@@ -23,19 +19,8 @@
   }
 
   &__empty-icon {
-    opacity: 0.3;
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-2);
-  }
-
-  .icon {
-    display: inline-flex;
-    align-items: center;
-
-    svg {
-      width: 4rem;
-      height: 4rem;
-    }
+    font-size: 3rem;
+    opacity: 0.4;
   }
 
   &__empty-title {
@@ -49,5 +34,37 @@
     font-size: var(--font-size-base);
     color: var(--color-text-muted);
     margin: 0;
+  }
+
+  &__new-card {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    text-decoration: none;
+    color: var(--color-text-muted);
+    transition: all var(--transition-normal);
+    background: rgba(255, 255, 255, 0.02);
+    gap: var(--space-2);
+
+    &:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+      background: var(--color-accent-muted);
+    }
+  }
+
+  &__new-icon {
+    font-size: 2.5rem;
+    font-weight: 300;
+    line-height: 1;
+  }
+
+  &__new-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
   }
 }

@@ -55,3 +55,11 @@ body::before {
   background-color: var(--color-accent-muted);
   color: var(--color-text-primary);
 }
+
+/* Card gradient placeholders — 6 presets, seeded by entry id */
+.card-gradient-0 { background: linear-gradient(135deg, #5C3A1E 0%, #8B5E3C 50%, #3D2314 100%); }
+.card-gradient-1 { background: linear-gradient(135deg, #1A4B5E 0%, #2E7FA0 50%, #103040 100%); }
+.card-gradient-2 { background: linear-gradient(135deg, #7A4A00 0%, #D4860B 50%, #4A2E00 100%); }
+.card-gradient-3 { background: linear-gradient(135deg, #2D3A4E 0%, #4A5E7A 50%, #1A2535 100%); }
+.card-gradient-4 { background: linear-gradient(135deg, #6B2F2F 0%, #A04040 50%, #3D1818 100%); }
+.card-gradient-5 { background: linear-gradient(135deg, #1E4A30 0%, #2E7A50 50%, #102A1C 100%); }

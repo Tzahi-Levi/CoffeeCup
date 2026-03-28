@@ -1,28 +1,105 @@
 .library-page {
-  min-height: calc(100vh - 72px);
-  padding: var(--space-4) var(--space-3);
+  padding: var(--space-6);
 
-  @media (min-width: 640px) {
-    padding: var(--space-6) var(--space-4);
+  @media (max-width: 640px) {
+    padding: var(--space-4) var(--space-3);
   }
 
-  @media (min-width: 1024px) {
-    padding: var(--space-8) var(--space-6);
-  }
-
-  &__container {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  &__toolbar {
+  // ── Header ────────────────────────────────────────────────────────────
+  &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-8);
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  &__add-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-5);
+    background: var(--color-accent);
+    color: #fff;
+    border-radius: var(--radius-btn);
+    text-decoration: none;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    transition: background var(--transition-fast);
+    white-space: nowrap;
+
+    &:hover {
+      background: var(--color-accent-hover);
+    }
+  }
+
+  // ── Content layout (main + aside) ─────────────────────────────────────
+  &__content {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: var(--space-6);
+    align-items: start;
+
+    @media (max-width: 1100px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    min-width: 0;
+  }
+
+  // ── Hero section ──────────────────────────────────────────────────────
+  &__hero {
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
+  // ── Collection section ────────────────────────────────────────────────
+  &__collection {
+    display: flex;
+    flex-direction: column;
     gap: var(--space-4);
   }
 
+  // ── Aside / widgets ───────────────────────────────────────────────────
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    position: sticky;
+    top: var(--space-6);
+
+    @media (max-width: 1100px) {
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+    }
+  }
+
+  // ── Loading state ──────────────────────────────────────────────────────
   &__loading {
     display: flex;
     flex-direction: column;
@@ -35,6 +112,7 @@
   &__loading-text {
     color: var(--color-text-muted);
     font-size: var(--font-size-base);
+    margin: 0;
   }
 
   &__spinner {
@@ -44,6 +122,211 @@
     border-top-color: var(--color-accent);
     border-radius: var(--border-radius-full);
     animation: spin 0.8s linear infinite;
+  }
+}
+
+// ── Hero Card ─────────────────────────────────────────────────────────────
+.hero-card {
+  height: 260px;
+  position: relative;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  // Default fallback gradient
+  background: linear-gradient(135deg, #5C3A1E 0%, #8B5E3C 100%);
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.1) 55%, transparent 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-5);
+  }
+
+  &__badges {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  &__badge {
+    padding: 4px var(--space-3);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+
+    &--featured {
+      background: var(--color-accent);
+    }
+  }
+
+  &__info {
+    color: #fff;
+  }
+
+  &__name {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    margin: 0 0 var(--space-1);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: -0.01em;
+  }
+
+  &__origin {
+    font-size: var(--font-size-sm);
+    margin: 0 0 var(--space-1);
+    opacity: 0.85;
+  }
+
+  &__roasted {
+    font-size: var(--font-size-xs);
+    margin: 0;
+    opacity: 0.65;
+  }
+}
+
+// ── Collection header ─────────────────────────────────────────────────────
+.collection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  &__title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__count {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    background: var(--color-bg-elevated);
+    padding: 2px var(--space-3);
+    border-radius: var(--border-radius-full);
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-1);
+  }
+}
+
+// ── View toggle ───────────────────────────────────────────────────────────
+.view-toggle {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-primary);
+  transition: all var(--transition-fast);
+  line-height: 1;
+
+  &--active {
+    background: var(--color-bg-elevated);
+    border-color: var(--border-color-accent);
+    color: var(--color-accent);
+  }
+
+  &:hover:not(.view-toggle--active) {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-secondary);
+  }
+}
+
+// ── Widget cards ──────────────────────────────────────────────────────────
+.widget-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  padding: var(--space-5);
+
+  @media (max-width: 1100px) {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  &__title {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 var(--space-4);
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  &__empty {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+// ── Widget stat ───────────────────────────────────────────────────────────
+.widget-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  &__value {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+  }
+}
+
+// ── Degassing reminder ────────────────────────────────────────────────────
+.degassing-reminder {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+
+  &__icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.6;
+
+    strong {
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-semibold);
+    }
   }
 }
 

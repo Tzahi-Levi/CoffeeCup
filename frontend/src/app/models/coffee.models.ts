@@ -34,6 +34,10 @@ export interface CoffeeEntry {
   coffeeType: CoffeeType | null;
   /** blend components; empty array when single-origin or unset */
   blendComponents: BlendComponent[];
+  /** flavor descriptors e.g. ["Nutty", "Chocolate"] */
+  flavorNotes: string[];
+  /** ISO 8601 date of roast, e.g. "2024-01-15" — null if unknown */
+  roastedAt: string | null;
   /** ISO 8601 timestamp */
   createdAt: string;
   /** ISO 8601 timestamp */
@@ -55,4 +59,6 @@ export interface CoffeeEntryPayload {
   roastLevel: RoastLevel | null;
   coffeeType: CoffeeType | null;
   blendComponents: BlendComponent[];
+  flavorNotes: string[];
+  roastedAt: string | null;
 }
