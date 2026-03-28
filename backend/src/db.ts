@@ -1,7 +1,11 @@
 import { createClient, Client } from '@libsql/client';
 
+// On Vercel the working directory is read-only; fall back to /tmp which is writable.
+// For local development, fall back to a local SQLite file.
+const localFallback = process.env['VERCEL'] ? 'file:/tmp/local.db' : 'file:./local.db';
+
 export const db: Client = createClient({
-  url: process.env['TURSO_DATABASE_URL'] ?? 'file:./local.db',
+  url: process.env['TURSO_DATABASE_URL'] ?? localFallback,
   authToken: process.env['TURSO_AUTH_TOKEN'],
 });
 
