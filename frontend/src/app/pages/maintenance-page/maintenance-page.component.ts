@@ -4,21 +4,23 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { combineLatest, map, Observable } from 'rxjs';
 import { MaintenanceService } from '../../services/maintenance.service';
 import { MaintenanceTaskView, MaintenanceTaskPayload, IntervalType } from '../../models/maintenance.models';
-import { MaintenanceTaskCardComponent } from '../../components/maintenance-task-card/maintenance-task-card.component';
 
 const ICON_OPTIONS = ['🔄', '🧪', '⚙️', '🔧', '🫧', '🧹', '💧', '🛠️', '🔩', '✨', '📋', '⏱️'];
 
 interface PageVm {
   tasks: MaintenanceTaskView[];
+  alertTasks: MaintenanceTaskView[];
   totalShots: number;
   overdueCount: number;
   dueSoonCount: number;
+  healthIndex: number;
+  nextShotsLabel: string;
 }
 
 @Component({
   selector: 'app-maintenance-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MaintenanceTaskCardComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './maintenance-page.component.html',
   styleUrl: './maintenance-page.component.scss',
 })
@@ -45,19 +47,31 @@ export class MaintenancePageComponent implements OnInit {
       this.maintenanceService.settings$,
     ]).pipe(
       map(([tasks, settings]) => {
+        const statusOrder = { overdue: 0, 'due-soon': 1, ok: 2 };
         const views = tasks
           .map(t => MaintenanceService.computeTaskView(t, settings.totalShots))
           .sort((a, b) => {
-            const statusOrder = { overdue: 0, 'due-soon': 1, ok: 2 };
             const diff = statusOrder[a.status] - statusOrder[b.status];
             return diff !== 0 ? diff : a.sortOrder - b.sortOrder;
           });
-        return {
-          tasks: views,
-          totalShots: settings.totalShots,
-          overdueCount: views.filter(t => t.status === 'overdue').length,
-          dueSoonCount: views.filter(t => t.status === 'due-soon').length,
-        };
+
+        const overdueCount = views.filter(t => t.status === 'overdue').length;
+        const dueSoonCount = views.filter(t => t.status === 'due-soon').length;
+        const okCount = views.filter(t => t.status === 'ok').length;
+        const total = views.length || 1;
+        const healthIndex = Math.round((okCount / total) * 100);
+
+        const alertTasks = views.filter(t => t.status !== 'ok');
+
+        // Label for the shots progress bar: nearest shots-based task
+        const nextShotsTask = views
+          .filter(t => t.intervalType === 'shots' && t.status !== 'overdue')
+          .sort((a, b) => (a.shotsUntilNext ?? 999) - (b.shotsUntilNext ?? 999))[0];
+        const nextShotsLabel = nextShotsTask
+          ? `${nextShotsTask.shotsUntilNext} shots until next ${nextShotsTask.name.toLowerCase()}`
+          : 'All shots-based tasks up to date';
+
+        return { tasks: views, alertTasks, totalShots: settings.totalShots, overdueCount, dueSoonCount, healthIndex, nextShotsLabel };
       })
     );
 
@@ -69,16 +83,13 @@ export class MaintenancePageComponent implements OnInit {
     });
   }
 
-  increment(currentShots: number): void {
-    this.maintenanceService.updateShotCount(1).subscribe();
+  increment(): void { this.maintenanceService.updateShotCount(1).subscribe(); }
+  decrement(current: number): void {
+    if (current > 0) this.maintenanceService.updateShotCount(-1).subscribe();
   }
 
-  decrement(currentShots: number): void {
-    this.maintenanceService.updateShotCount(-1).subscribe();
-  }
-
-  startShotEdit(currentShots: number): void {
-    this.shotEditValue = currentShots;
+  startShotEdit(current: number): void {
+    this.shotEditValue = current;
     this.shotEditMode = true;
   }
 
@@ -88,44 +99,26 @@ export class MaintenancePageComponent implements OnInit {
     this.maintenanceService.setShotCount(Math.max(0, this.shotEditValue)).subscribe();
   }
 
-  onShotEditKeydown(event: KeyboardEvent, currentShots: number): void {
+  onShotEditKeydown(event: KeyboardEvent, current: number): void {
     if (event.key === 'Enter') this.commitShotEdit();
-    if (event.key === 'Escape') {
-      this.shotEditMode = false;
-      this.shotEditValue = currentShots;
-    }
+    if (event.key === 'Escape') { this.shotEditMode = false; this.shotEditValue = current; }
   }
 
-  completeTask(taskId: string): void {
-    this.maintenanceService.completeTask(taskId).subscribe();
-  }
+  completeTask(taskId: string): void { this.maintenanceService.completeTask(taskId).subscribe(); }
 
   openAddForm(): void {
     this.editingTaskId = null;
-    this.addForm.reset({
-      name: '',
-      icon: ICON_OPTIONS[0],
-      intervalType: 'shots',
-      intervalValue: 10,
-    });
+    this.addForm.reset({ name: '', icon: ICON_OPTIONS[0], intervalType: 'shots', intervalValue: 10 });
     this.showAddForm = true;
   }
 
   openEditForm(task: MaintenanceTaskView): void {
     this.editingTaskId = task.id;
-    this.addForm.setValue({
-      name: task.name,
-      icon: task.icon,
-      intervalType: task.intervalType,
-      intervalValue: task.intervalValue,
-    });
+    this.addForm.setValue({ name: task.name, icon: task.icon, intervalType: task.intervalType, intervalValue: task.intervalValue });
     this.showAddForm = true;
   }
 
-  cancelForm(): void {
-    this.showAddForm = false;
-    this.editingTaskId = null;
-  }
+  cancelForm(): void { this.showAddForm = false; this.editingTaskId = null; }
 
   submitForm(): void {
     if (this.addForm.invalid) return;
@@ -138,15 +131,28 @@ export class MaintenancePageComponent implements OnInit {
     this.cancelForm();
   }
 
-  deleteTask(taskId: string): void {
-    this.maintenanceService.deleteTask(taskId).subscribe();
+  deleteTask(taskId: string): void { this.maintenanceService.deleteTask(taskId).subscribe(); }
+  selectIcon(icon: string): void { this.addForm.patchValue({ icon }); }
+  trackById(_: number, task: MaintenanceTaskView): string { return task.id; }
+
+  timeLabel(task: MaintenanceTaskView): string {
+    if (task.intervalType === 'shots') {
+      const shots = task.shotsUntilNext ?? 0;
+      if (task.status === 'overdue') return `${Math.abs(shots)} shots ago`;
+      if (task.lastCompletedShots != null) return `${Math.abs(shots)} shots left`;
+      return 'Never done';
+    } else {
+      const days = task.daysUntilNext ?? 0;
+      if (task.status === 'overdue') return `${Math.abs(days)}d overdue`;
+      if (task.lastCompletedAt) return `in ${days}d`;
+      return 'Never done';
+    }
   }
 
-  selectIcon(icon: string): void {
-    this.addForm.patchValue({ icon });
-  }
-
-  trackById(_: number, task: MaintenanceTaskView): string {
-    return task.id;
+  systemStatus(healthIndex: number): string {
+    if (healthIndex === 100) return 'SYSTEM OPTIMAL';
+    if (healthIndex >= 80) return 'SYSTEM GOOD';
+    if (healthIndex >= 50) return 'NEEDS ATTENTION';
+    return 'ACTION REQUIRED';
   }
 }
