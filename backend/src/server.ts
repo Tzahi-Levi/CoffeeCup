@@ -36,6 +36,18 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 
+// Kick off DB init immediately and hold a reference to the promise.
+// Any request that arrives before init completes will await it here,
+// preventing "no such table" errors on cold starts.
+const dbReady = initDb().catch((err) => {
+  console.error(JSON.stringify({ level: 'error', message: 'DB init failed', error: String(err) }));
+});
+
+app.use(async (_req: Request, _res: Response, next: NextFunction) => {
+  await dbReady;
+  next();
+});
+
 // Log every request on Vercel so we can see what URL the function receives
 if (process.env['VERCEL']) {
   app.use((req: Request, _res: Response, next: NextFunction) => {
@@ -90,14 +102,9 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-// Initialize DB and start server (always init DB so the table exists on Vercel too)
-(async () => {
-  try {
-    await initDb();
-  } catch (err) {
-    console.error(JSON.stringify({ level: 'error', message: 'DB init failed', error: String(err) }));
-  }
-  if (!process.env['VERCEL']) {
+// Start local server (Vercel handles its own lifecycle)
+if (!process.env['VERCEL']) {
+  dbReady.then(() => {
     app.listen(PORT, () => {
       console.log(JSON.stringify({
         level: 'info',
@@ -108,7 +115,7 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
         timestamp: new Date().toISOString(),
       }));
     });
-  }
-})();
+  });
+}
 
 export default app;
