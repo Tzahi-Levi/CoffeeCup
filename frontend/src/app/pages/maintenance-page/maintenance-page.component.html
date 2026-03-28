@@ -1,21 +1,53 @@
 @if (vm$ | async; as vm) {
-  <div class="maintenance-page">
+<div class="mc-page">
 
-    <!-- Page Header -->
-    <header class="maintenance-page__header">
-      <h2 class="maintenance-page__title">🔧 Maintenance Concierge</h2>
-      <p class="maintenance-page__subtitle">Track your espresso machine upkeep</p>
-    </header>
+  <!-- ── Header ── -->
+  <header class="mc-header">
+    <h1 class="mc-header__title">Maintenance <span class="mc-header__accent">Concierge</span></h1>
+    <p class="mc-header__sub">Proactive hardware preservation for your espresso machine. Your daily ritual, protected by precision data.</p>
+  </header>
 
-    <!-- Shot Counter Widget -->
-    <section class="shot-counter">
-      <p class="shot-counter__label">Total Shots Pulled</p>
-      <div class="shot-counter__controls">
-        <button class="shot-counter__btn" (click)="decrement(vm.totalShots)" [disabled]="vm.totalShots <= 0">−</button>
+  <!-- ── Top row ── -->
+  <div class="mc-top">
 
+    <!-- Health Index Card -->
+    <div class="mc-card mc-card--health">
+      <span class="mc-badge" [class.mc-badge--ok]="vm.healthIndex >= 80" [class.mc-badge--warn]="vm.healthIndex < 80 && vm.healthIndex >= 50" [class.mc-badge--crit]="vm.healthIndex < 50">
+        <span class="mc-badge__dot"></span>{{ systemStatus(vm.healthIndex) }}
+      </span>
+      <p class="mc-health-index">{{ vm.healthIndex }}<span class="mc-health-index__pct">%</span> Health Index</p>
+      <div class="mc-stats">
+        <div class="mc-stat">
+          <span class="mc-stat__label">Tasks</span>
+          <span class="mc-stat__value">{{ vm.tasks.length }}</span>
+        </div>
+        <div class="mc-stat">
+          <span class="mc-stat__label">Overdue</span>
+          <span class="mc-stat__value mc-stat__value--alert">{{ vm.overdueCount }}</span>
+        </div>
+        <div class="mc-stat">
+          <span class="mc-stat__label">Due Soon</span>
+          <span class="mc-stat__value mc-stat__value--warn">{{ vm.dueSoonCount }}</span>
+        </div>
+      </div>
+      <div class="mc-card__chart-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0"  y="20" width="8"  height="16" rx="2" fill="currentColor" opacity="0.3"/>
+          <rect x="10" y="12" width="8"  height="24" rx="2" fill="currentColor" opacity="0.5"/>
+          <rect x="20" y="4"  width="8"  height="32" rx="2" fill="currentColor" opacity="0.7"/>
+          <rect x="30" y="14" width="8"  height="22" rx="2" fill="currentColor" opacity="0.5"/>
+          <rect x="40" y="8"  width="8"  height="28" rx="2" fill="currentColor" opacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Total Usage Card -->
+    <div class="mc-card mc-card--shots">
+      <span class="mc-card__eyebrow">TOTAL USAGE</span>
+      <div class="mc-shots">
         @if (shotEditMode) {
           <input
-            class="shot-counter__input"
+            class="mc-shots__input"
             type="number"
             [(ngModel)]="shotEditValue"
             min="0"
@@ -24,122 +56,139 @@
             autofocus
           />
         } @else {
-          <span class="shot-counter__value" (click)="startShotEdit(vm.totalShots)" title="Click to edit">
-            {{ vm.totalShots }}
+          <span class="mc-shots__num" (click)="startShotEdit(vm.totalShots)" title="Click to edit">
+            {{ vm.totalShots | number }}
           </span>
         }
-
-        <button class="shot-counter__btn" (click)="increment(vm.totalShots)">+</button>
+        <span class="mc-shots__unit">shots</span>
       </div>
-      <p class="shot-counter__hint">Click the number to set manually</p>
-    </section>
-
-    <!-- Alerts Strip -->
-    @if (vm.overdueCount > 0 || vm.dueSoonCount > 0) {
-      <div class="alerts-strip">
-        @if (vm.overdueCount > 0) {
-          <span class="alerts-strip__pill alerts-strip__pill--overdue">
-            🔴 {{ vm.overdueCount }} overdue
-          </span>
-        }
-        @if (vm.dueSoonCount > 0) {
-          <span class="alerts-strip__pill alerts-strip__pill--due-soon">
-            ⚠️ {{ vm.dueSoonCount }} due soon
-          </span>
-        }
+      <div class="mc-shots-bar">
+        <div class="mc-shots-bar__fill" [style.width.%]="vm.tasks.length ? (100 - vm.healthIndex) : 0"></div>
       </div>
-    }
+      <p class="mc-shots__hint">{{ vm.nextShotsLabel }}</p>
+      <div class="mc-counter">
+        <button class="mc-counter__btn" (click)="decrement(vm.totalShots)" [disabled]="vm.totalShots <= 0">−</button>
+        <button class="mc-counter__btn mc-counter__btn--plus" (click)="increment()">+</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Bottom row ── -->
+  <div class="mc-bottom">
+
+    <!-- Alerts Panel -->
+    <div class="mc-card mc-card--alerts">
+      <h3 class="mc-section-title">
+        <span class="mc-section-title__icon">⚠</span> Alerts
+      </h3>
+      @if (vm.alertTasks.length === 0) {
+        <p class="mc-alerts__empty">No alerts — machine is in great shape.</p>
+      }
+      @for (task of vm.alertTasks; track task.id) {
+        <div class="mc-alert-item" [class.mc-alert-item--overdue]="task.status === 'overdue'">
+          <div class="mc-alert-item__icon">{{ task.icon }}</div>
+          <div class="mc-alert-item__body">
+            <p class="mc-alert-item__name">{{ task.name }}</p>
+            <p class="mc-alert-item__desc">
+              @if (task.status === 'overdue') { Overdue — }
+              @if (task.status === 'due-soon') { Approaching — }
+              {{ timeLabel(task) }}
+            </p>
+            @if (task.status === 'overdue') {
+              <button class="mc-alert-item__cta" (click)="completeTask(task.id)">MARK DONE</button>
+            }
+          </div>
+        </div>
+      }
+    </div>
 
     <!-- Maintenance Roadmap -->
-    <section class="roadmap">
-      <h3 class="roadmap__heading">Maintenance Tasks</h3>
-      <div class="roadmap__scroll">
-        @for (task of vm.tasks; track trackById($index, task)) {
-          <app-maintenance-task-card
-            [task]="task"
-            (complete)="completeTask(task.id)"
-            (edit)="openEditForm(task)"
-            (delete)="deleteTask(task.id)"
-          />
+    <div class="mc-card mc-card--roadmap">
+      <div class="mc-roadmap-header">
+        <h3 class="mc-section-title">Maintenance Roadmap</h3>
+        <button class="mc-add-btn" (click)="showAddForm ? cancelForm() : openAddForm()">
+          {{ showAddForm ? '✕ Cancel' : '+ Add Task' }}
+        </button>
+      </div>
+
+      <div class="mc-roadmap">
+        <div class="mc-roadmap__line"></div>
+        @for (task of vm.tasks; track task.id; let i = $index) {
+          <div class="mc-node" [class]="'mc-node--' + task.status">
+            <button
+              class="mc-node__dot"
+              (click)="completeTask(task.id)"
+              [title]="'Mark ' + task.name + ' done'"
+            >
+              @if (task.status === 'ok' && task.lastCompletedAt) {
+                <span class="mc-node__check">✓</span>
+              } @else {
+                <span class="mc-node__emoji">{{ task.icon }}</span>
+              }
+            </button>
+            <span class="mc-node__name">{{ task.name | uppercase }}</span>
+            <span class="mc-node__time">{{ timeLabel(task) }}</span>
+            <div class="mc-node__actions">
+              <button class="mc-node__action-btn" (click)="openEditForm(task)" title="Edit">✏️</button>
+              @if (!task.isPreset) {
+                <button class="mc-node__action-btn mc-node__action-btn--del" (click)="deleteTask(task.id)" title="Delete">🗑️</button>
+              }
+            </div>
+          </div>
         } @empty {
-          <p class="roadmap__empty">No maintenance tasks yet.</p>
+          <p class="mc-roadmap__empty">No tasks yet. Add one to get started.</p>
         }
       </div>
-    </section>
+    </div>
 
-    <!-- Add Task Button -->
-    @if (!showAddForm) {
-      <button class="add-task-btn" (click)="openAddForm()">+ Add Custom Task</button>
-    }
+  </div>
 
-    <!-- Add / Edit Task Form -->
-    @if (showAddForm) {
-      <section class="task-form" [formGroup]="addForm">
-        <h3 class="task-form__title">{{ editingTaskId ? 'Edit Task' : 'New Task' }}</h3>
+  <!-- ── Add / Edit Form ── -->
+  @if (showAddForm) {
+    <div class="mc-card mc-form" [formGroup]="addForm">
+      <h3 class="mc-section-title">{{ editingTaskId ? 'Edit Task' : 'New Task' }}</h3>
 
-        <div class="task-form__field">
-          <label class="task-form__label" for="task-name">Name</label>
-          <input
-            id="task-name"
-            class="task-form__input"
-            type="text"
-            formControlName="name"
-            placeholder="e.g. Group Head Cleaning"
-            maxlength="60"
-          />
+      <div class="mc-form__row">
+        <div class="mc-form__field mc-form__field--grow">
+          <label class="mc-form__label">Name</label>
+          <input class="mc-form__input" type="text" formControlName="name" placeholder="e.g. Group Head Cleaning" maxlength="60" />
         </div>
 
-        <div class="task-form__field">
-          <label class="task-form__label">Icon</label>
-          <div class="task-form__icon-grid">
-            @for (icon of iconOptions; track icon) {
-              <button
-                type="button"
-                class="task-form__icon-btn"
-                [class.task-form__icon-btn--selected]="addForm.value.icon === icon"
-                (click)="selectIcon(icon)"
-              >{{ icon }}</button>
+        <div class="mc-form__field">
+          <label class="mc-form__label">Interval</label>
+          <div class="mc-form__toggle">
+            @for (type of intervalTypes; track type) {
+              <button type="button" class="mc-form__toggle-btn" [class.mc-form__toggle-btn--on]="addForm.value.intervalType === type" (click)="addForm.patchValue({ intervalType: type })">
+                {{ type }}
+              </button>
             }
           </div>
         </div>
 
-        <div class="task-form__row">
-          <div class="task-form__field">
-            <label class="task-form__label">Interval Type</label>
-            <div class="task-form__toggle">
-              @for (type of intervalTypes; track type) {
-                <button
-                  type="button"
-                  class="task-form__toggle-btn"
-                  [class.task-form__toggle-btn--active]="addForm.value.intervalType === type"
-                  (click)="addForm.patchValue({ intervalType: type })"
-                >{{ type }}</button>
-              }
-            </div>
-          </div>
-
-          <div class="task-form__field">
-            <label class="task-form__label" for="task-interval">
-              Every {{ addForm.value.intervalType === 'shots' ? 'shots' : 'days' }}
-            </label>
-            <input
-              id="task-interval"
-              class="task-form__input task-form__input--short"
-              type="number"
-              formControlName="intervalValue"
-              min="1"
-            />
-          </div>
+        <div class="mc-form__field">
+          <label class="mc-form__label">Every</label>
+          <input class="mc-form__input mc-form__input--short" type="number" formControlName="intervalValue" min="1" />
         </div>
+      </div>
 
-        <div class="task-form__actions">
-          <button type="button" class="task-form__btn task-form__btn--cancel" (click)="cancelForm()">Cancel</button>
-          <button type="button" class="task-form__btn task-form__btn--save" (click)="submitForm()" [disabled]="addForm.invalid">
-            {{ editingTaskId ? 'Save Changes' : 'Add Task' }}
-          </button>
+      <div class="mc-form__field">
+        <label class="mc-form__label">Icon</label>
+        <div class="mc-form__icons">
+          @for (icon of iconOptions; track icon) {
+            <button type="button" class="mc-form__icon-btn" [class.mc-form__icon-btn--on]="addForm.value.icon === icon" (click)="selectIcon(icon)">{{ icon }}</button>
+          }
         </div>
-      </section>
-    }
+      </div>
 
-  </div>
+      <div class="mc-form__actions">
+        <button type="button" class="mc-form__btn mc-form__btn--cancel" (click)="cancelForm()">Cancel</button>
+        <button type="button" class="mc-form__btn mc-form__btn--save" (click)="submitForm()" [disabled]="addForm.invalid">
+          {{ editingTaskId ? 'Save Changes' : 'Add Task' }}
+        </button>
+      </div>
+    </div>
+  }
+
+</div>
 }
