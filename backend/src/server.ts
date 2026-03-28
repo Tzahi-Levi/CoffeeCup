@@ -43,14 +43,15 @@ app.get('/health', (_req: Request, res: Response) => {
 // API routes
 app.use('/api/v1/coffees', coffeesRouter);
 
-// Serve Angular build output
-app.use(express.static(DIST_DIR));
-
-// SPA fallback — all non-matched routes return index.html
-// app.use() is used instead of app.get('*') because Express 5 requires named wildcards
-app.use((_req: Request, res: Response) => {
-  res.sendFile(path.join(DIST_DIR, 'index.html'));
-});
+// On Vercel, static files are served by Vercel CDN directly.
+// Only serve static files and SPA fallback when running locally.
+if (!process.env['VERCEL']) {
+  app.use(express.static(DIST_DIR));
+  // SPA fallback — all non-matched routes return index.html
+  app.use((_req: Request, res: Response) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
 
 // Global error handler
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
@@ -67,9 +68,14 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-if (!process.env['VERCEL']) {
-  (async () => {
+// Initialize DB and start server (always init DB so the table exists on Vercel too)
+(async () => {
+  try {
     await initDb();
+  } catch (err) {
+    console.error(JSON.stringify({ level: 'error', message: 'DB init failed', error: String(err) }));
+  }
+  if (!process.env['VERCEL']) {
     app.listen(PORT, () => {
       console.log(JSON.stringify({
         level: 'info',
@@ -80,7 +86,7 @@ if (!process.env['VERCEL']) {
         timestamp: new Date().toISOString(),
       }));
     });
-  })();
-}
+  }
+})();
 
 export default app;
