@@ -26,6 +26,14 @@ export const routes: Routes = [
     data: { animation: 'FormPage' }
   },
   {
+    path: 'maintenance',
+    loadComponent: () =>
+      import('./pages/maintenance-page/maintenance-page.component').then(
+        (m) => m.MaintenancePageComponent
+      ),
+    data: { animation: 'MaintenancePage' }
+  },
+  {
     path: '**',
     redirectTo: ''
   }
