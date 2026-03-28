@@ -66,7 +66,7 @@
       135deg,
       var(--color-accent-hover) 0%,
       var(--color-accent) 50%,
-      #A86508 100%
+      var(--color-accent-muted) 100%
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

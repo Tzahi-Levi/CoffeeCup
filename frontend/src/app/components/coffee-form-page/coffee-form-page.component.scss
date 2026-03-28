@@ -170,18 +170,18 @@
     font-weight: var(--font-weight-semibold);
 
     &--valid {
-      color: #5fa85a;
+      color: var(--color-success);
     }
 
     &--invalid {
-      color: #c0392b;
+      color: var(--color-error);
     }
   }
 
   &__blend-error {
     margin: 0;
     font-size: var(--font-size-sm);
-    color: #c0392b;
+    color: var(--color-error);
   }
 
   &__blend-row {
@@ -221,13 +221,13 @@
     }
 
     &--error {
-      border-color: #c0392b;
+      border-color: var(--color-error);
     }
   }
 
   &__blend-field-error {
     font-size: var(--font-size-xs);
-    color: #c0392b;
+    color: var(--color-error);
   }
 
   &__blend-remove {
@@ -243,8 +243,8 @@
     align-self: center;
 
     &:hover {
-      color: #c0392b;
-      background: rgba(192, 57, 43, 0.12);
+      color: var(--color-error);
+      background: var(--color-error-glow);
     }
   }
 
@@ -269,7 +269,7 @@
   &__submit-error {
     margin: 0;
     font-size: var(--font-size-sm);
-    color: #c0392b;
+    color: var(--color-error);
     text-align: right;
   }
 

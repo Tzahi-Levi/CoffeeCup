@@ -1,0 +1,16 @@
+# Angular build cache - very large, not needed for deployment
+.angular/
+
+# Dependencies - Vercel installs these itself
+node_modules/
+
+# Local env files
+.env.local
+.env.development.local
+
+# Test coverage
+/coverage
+
+# Misc
+.DS_Store
+Thumbs.db
