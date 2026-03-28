@@ -1,24 +1,127 @@
 <div class="library-page">
-  <div class="library-page__container">
-    <div class="library-page__toolbar">
-      <app-search-bar (searchQuery)="onSearch($event)" />
-    </div>
 
-    @if (loading) {
-      <div class="library-page__loading" aria-live="polite">
-        <div class="library-page__spinner" role="status" aria-label="Loading coffees"></div>
-        <p class="library-page__loading-text">Loading your coffees...</p>
-      </div>
-    } @else {
-      <app-coffee-card-grid
-        [coffees]="(filteredCoffees$ | async) ?? []"
-        (edit)="onEdit($event)"
-        (delete)="onDeleteRequest($event)"
-      />
-    }
+  <!-- Page Header -->
+  <div class="library-page__header">
+    <h1 class="library-page__title">Bean Journal</h1>
+    <div class="library-page__header-actions">
+      <app-search-bar (searchQuery)="onSearch($event)" />
+      <a routerLink="/add" class="library-page__add-btn">+ Add New Bag</a>
+    </div>
   </div>
 
-  <app-fab-button />
+  @if (loading) {
+    <div class="library-page__loading" aria-live="polite">
+      <div class="library-page__spinner" role="status" aria-label="Loading coffees"></div>
+      <p class="library-page__loading-text">Loading your coffees...</p>
+    </div>
+  } @else {
+    <div class="library-page__content">
+
+      <!-- Main column -->
+      <div class="library-page__main">
+
+        <!-- Hero: Featured Coffee -->
+        @if (featuredCoffee$ | async; as featured) {
+          <section class="library-page__hero" aria-label="Featured coffee">
+            <div class="hero-card" [ngClass]="getGradientClass(featured.id)">
+              <div class="hero-card__overlay">
+                <div class="hero-card__badges">
+                  @if (featured.roastLevel) {
+                    <span class="hero-card__badge">{{ featured.roastLevel }}</span>
+                  }
+                  <span class="hero-card__badge hero-card__badge--featured">⭐ Top Rated</span>
+                </div>
+                <div class="hero-card__info">
+                  <h2 class="hero-card__name">{{ featured.name }}</h2>
+                  @if (featured.origin) {
+                    <p class="hero-card__origin">{{ featured.origin }}</p>
+                  }
+                  @if (featured.roastedAt) {
+                    <p class="hero-card__roasted">
+                      Roasted {{ getDaysAgoRoasted(featured.roastedAt) }} days ago
+                    </p>
+                  }
+                </div>
+              </div>
+            </div>
+          </section>
+        }
+
+        <!-- Collection Section -->
+        <section class="library-page__collection">
+          <div class="collection-header">
+            <div class="collection-header__left">
+              <h2 class="collection-header__title">My Collection</h2>
+              <span class="collection-header__count">
+                {{ (activeBagsCount$ | async) ?? 0 }} bags
+              </span>
+            </div>
+            <div class="collection-header__actions" role="group" aria-label="View mode">
+              <button
+                class="view-toggle"
+                [class.view-toggle--active]="viewMode === 'grid'"
+                (click)="viewMode = 'grid'"
+                title="Grid view"
+                aria-label="Switch to grid view"
+              >⊞</button>
+              <button
+                class="view-toggle"
+                [class.view-toggle--active]="viewMode === 'list'"
+                (click)="viewMode = 'list'"
+                title="List view"
+                aria-label="Switch to list view"
+              >☰</button>
+            </div>
+          </div>
+
+          <app-coffee-card-grid
+            [coffees]="(filteredCoffees$ | async) ?? []"
+            [viewMode]="viewMode"
+            [showAddCard]="viewMode === 'grid'"
+            (edit)="onEdit($event)"
+            (delete)="onDeleteRequest($event)"
+          />
+        </section>
+      </div>
+
+      <!-- Right Widgets Aside -->
+      <aside class="library-page__aside">
+
+        <!-- Journal Stats -->
+        <div class="widget-card">
+          <h3 class="widget-card__title">Journal Stats</h3>
+          <div class="widget-card__stats">
+            <div class="widget-stat">
+              <span class="widget-stat__value">{{ (activeBagsCount$ | async) ?? 0 }}</span>
+              <span class="widget-stat__label">Active Bags</span>
+            </div>
+            <div class="widget-stat">
+              <span class="widget-stat__value">{{ topRegion$ | async }}</span>
+              <span class="widget-stat__label">Top Region</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Degassing Reminder -->
+        <div class="widget-card">
+          <h3 class="widget-card__title">Degassing Reminder</h3>
+          @if (degassingReminder$ | async; as reminder) {
+            <div class="degassing-reminder">
+              <div class="degassing-reminder__icon">⏱</div>
+              <p class="degassing-reminder__text">
+                <strong>{{ reminder.coffeeName }}</strong> peaks in
+                {{ reminder.daysUntilPeak }}
+                {{ reminder.daysUntilPeak === 1 ? 'day' : 'days' }}
+              </p>
+            </div>
+          } @else {
+            <p class="widget-card__empty">Add a roast date to track when your coffee reaches peak flavor.</p>
+          }
+        </div>
+
+      </aside>
+    </div>
+  }
 
   @if (pendingDeleteId) {
     <app-confirm-dialog
@@ -27,4 +130,5 @@
       (cancelled)="onDeleteCancelled()"
     />
   }
+
 </div>

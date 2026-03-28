@@ -1,0 +1,24 @@
+<nav class="sidebar-nav" aria-label="Main navigation">
+  <div class="sidebar-nav__logo" aria-hidden="true">☕</div>
+  <ul class="sidebar-nav__links">
+    <li>
+      <a
+        routerLink="/"
+        routerLinkActive="sidebar-nav__link--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="sidebar-nav__link"
+        title="Library"
+        aria-label="Coffee library"
+      >📖</a>
+    </li>
+    <li>
+      <a
+        routerLink="/add"
+        routerLinkActive="sidebar-nav__link--active"
+        class="sidebar-nav__link"
+        title="Add Coffee"
+        aria-label="Add new coffee"
+      >＋</a>
+    </li>
+  </ul>
+</nav>
