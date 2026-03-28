@@ -1,0 +1,60 @@
+<div class="form-page">
+  <div class="form-page__container">
+    <div class="form-page__header">
+      <h2 class="form-page__title">{{ isEditMode ? 'Edit Bean' : 'Add Bean' }}</h2>
+      <p class="form-page__subtitle">{{ isEditMode ? 'Update your bean details' : 'Log a new bag of beans' }}</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-page__form" novalidate>
+      <app-form-field label="Bean Name *" [errorMessage]="getError('name')">
+        <input type="text" formControlName="name" placeholder="e.g. Ethiopia Yirgacheffe" />
+      </app-form-field>
+
+      <app-form-field label="Origin" [errorMessage]="getError('origin')">
+        <input type="text" formControlName="origin" placeholder="e.g. Ethiopia, Yirgacheffe" />
+      </app-form-field>
+
+      <!-- Roast Level -->
+      <div class="form-page__field-block">
+        <span class="form-page__field-label">Roast Level</span>
+        <div class="form-page__segment-group" role="group" aria-label="Roast level">
+          @for (level of roastLevels; track level.value) {
+            <button
+              type="button"
+              class="form-page__segment-btn"
+              [class.form-page__segment-btn--active]="form.get('roastLevel')?.value === level.value"
+              (click)="selectRoastLevel(level.value)"
+            >{{ level.label }}</button>
+          }
+        </div>
+      </div>
+
+      <app-form-field label="Roast Date" [errorMessage]="''">
+        <input type="date" formControlName="roastedAt" />
+      </app-form-field>
+
+      <app-form-field label="Flavor Notes" [errorMessage]="getError('flavorNotes')">
+        <input type="text" formControlName="flavorNotes" placeholder="e.g. Blueberry, Jasmine, Dark Chocolate" />
+      </app-form-field>
+
+      <app-form-field label="Bag Weight (grams)" [errorMessage]="getError('bagWeightGrams')">
+        <input type="number" formControlName="bagWeightGrams" min="1" max="2000" placeholder="250" />
+      </app-form-field>
+
+      <app-form-field label="Notes" [errorMessage]="getError('notes')">
+        <textarea formControlName="notes" rows="4" placeholder="Any additional notes about this batch..."></textarea>
+      </app-form-field>
+
+      @if (submitError) {
+        <p class="form-page__submit-error">{{ submitError }}</p>
+      }
+
+      <div class="form-page__actions">
+        <button type="button" class="form-page__btn form-page__btn--cancel" (click)="onCancel()">Cancel</button>
+        <button type="submit" class="form-page__btn form-page__btn--submit" [disabled]="submitting">
+          {{ isEditMode ? 'Save Changes' : 'Add Bean' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

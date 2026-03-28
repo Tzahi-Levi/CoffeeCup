@@ -66,8 +66,6 @@ export class CoffeeFormPageComponent implements OnInit {
       roastLevel: new FormControl<RoastLevel | null>(null),
       coffeeType: new FormControl<CoffeeType | null>(null),
       blendComponents: this.fb.array([], blendTotalValidator),
-      flavorNotes: ['', Validators.maxLength(500)],
-      roastedAt: new FormControl<string | null>(null),
     });
 
     this.editId = this.route.snapshot.paramMap.get('id');
@@ -86,8 +84,6 @@ export class CoffeeFormPageComponent implements OnInit {
           rating: entry.rating,
           roastLevel: entry.roastLevel ?? null,
           coffeeType: entry.coffeeType ?? null,
-          flavorNotes: (entry.flavorNotes ?? []).join(', '),
-          roastedAt: entry.roastedAt ?? null,
         });
         // Rebuild blend components FormArray from saved entry
         const components = entry.blendComponents ?? [];
@@ -203,11 +199,6 @@ export class CoffeeFormPageComponent implements OnInit {
         origin: c.origin.trim(),
         percentage: Number(c.percentage)
       })),
-      flavorNotes: (raw['flavorNotes'] as string ?? '')
-        .split(',')
-        .map((s: string) => s.trim())
-        .filter((s: string) => s.length > 0),
-      roastedAt: raw['roastedAt'] || null,
     };
 
     this.submitting = true;

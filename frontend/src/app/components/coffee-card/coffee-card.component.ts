@@ -1,13 +1,13 @@
 import { Component, Input, Output, EventEmitter, HostBinding, ChangeDetectionStrategy } from '@angular/core';
-import { NgClass } from '@angular/common';
-import { CoffeeEntry } from '../../models/coffee.models';
+import { CoffeeEntry, BlendComponent } from '../../models/coffee.models';
+import { StarRatingComponent } from '../star-rating/star-rating.component';
 import { cardEnterLeave } from './coffee-card.animations';
 
 @Component({
   selector: 'app-coffee-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgClass],
+  imports: [StarRatingComponent],
   templateUrl: './coffee-card.component.html',
   styleUrl: './coffee-card.component.scss',
   animations: [cardEnterLeave]
@@ -17,24 +17,6 @@ export class CoffeeCardComponent {
   @Output() edit = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
   @HostBinding('@cardEnterLeave') animate = true;
-
-  /** Hash coffee id → one of 6 gradient class names for consistent per-card colors. */
-  get gradientClass(): string {
-    let hash = 0;
-    for (let i = 0; i < this.coffee.id.length; i++) {
-      hash = (hash << 5) - hash + this.coffee.id.charCodeAt(i);
-      hash |= 0;
-    }
-    return `card-gradient-${Math.abs(hash) % 6}`;
-  }
-
-  get roastedAtFormatted(): string {
-    if (!this.coffee.roastedAt) return '';
-    return new Date(this.coffee.roastedAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
-  }
 
   get coffeeTypeLabel(): string {
     return this.coffee.coffeeType === 'single-origin' ? 'Single Origin'
@@ -51,5 +33,19 @@ export class CoffeeCardComponent {
       'dark': 'Dark',
     };
     return this.coffee.roastLevel ? (labels[this.coffee.roastLevel] ?? '') : '';
+  }
+
+  get truncatedNotes(): string {
+    if (!this.coffee.notes) return '';
+    return this.coffee.notes.length > 100
+      ? this.coffee.notes.slice(0, 100) + '…'
+      : this.coffee.notes;
+  }
+
+  get blendBreakdown(): string {
+    if (!this.coffee.blendComponents?.length) return '';
+    return this.coffee.blendComponents
+      .map((c: BlendComponent) => `${c.percentage}% ${c.origin}`)
+      .join(', ');
   }
 }

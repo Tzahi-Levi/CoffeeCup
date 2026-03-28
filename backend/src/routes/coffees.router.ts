@@ -19,10 +19,6 @@ function rowToEntry(row: Record<string, unknown>): Record<string, unknown> {
     blendComponents: row['blend_components']
       ? JSON.parse(row['blend_components'] as string)
       : [],
-    flavorNotes: row['flavor_notes']
-      ? JSON.parse(row['flavor_notes'] as string)
-      : [],
-    roastedAt: row['roasted_at'] ?? null,
     createdAt: row['created_at'],
     updatedAt: row['updated_at'],
   };
@@ -47,8 +43,8 @@ router.post('/', async (req: Request, res: Response) => {
   const id = (body['id'] as string) ?? crypto.randomUUID();
   await db.execute({
     sql: `INSERT INTO coffee_entries
-      (id, name, origin, grind_level, dose_grams, brew_time_seconds, notes, rating, roast_level, coffee_type, blend_components, flavor_notes, roasted_at, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, name, origin, grind_level, dose_grams, brew_time_seconds, notes, rating, roast_level, coffee_type, blend_components, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       body['name'] as string,
@@ -61,8 +57,6 @@ router.post('/', async (req: Request, res: Response) => {
       (body['roastLevel'] as string | null) ?? null,
       (body['coffeeType'] as string | null) ?? null,
       body['blendComponents'] ? JSON.stringify(body['blendComponents']) : '[]',
-      body['flavorNotes'] ? JSON.stringify(body['flavorNotes']) : '[]',
-      (body['roastedAt'] as string | null) ?? null,
       now,
       now,
     ],
@@ -96,7 +90,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     sql: `UPDATE coffee_entries SET
       name = ?, origin = ?, grind_level = ?, dose_grams = ?, brew_time_seconds = ?,
       notes = ?, rating = ?, roast_level = ?, coffee_type = ?, blend_components = ?,
-      flavor_notes = ?, roasted_at = ?, updated_at = ?
+      updated_at = ?
       WHERE id = ?`,
     args: [
       body['name'] as string,
@@ -109,8 +103,6 @@ router.put('/:id', async (req: Request, res: Response) => {
       (body['roastLevel'] as string | null) ?? null,
       (body['coffeeType'] as string | null) ?? null,
       body['blendComponents'] ? JSON.stringify(body['blendComponents']) : '[]',
-      body['flavorNotes'] ? JSON.stringify(body['flavorNotes']) : '[]',
-      (body['roastedAt'] as string | null) ?? null,
       now,
       id,
     ],

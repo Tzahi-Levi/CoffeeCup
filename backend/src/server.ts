@@ -5,6 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import { initDb } from './db';
 import coffeesRouter from './routes/coffees.router';
+import beansRouter from './routes/beans.router';
 
 const app = express();
 const PORT = process.env['PORT'] ? Number(process.env['PORT']) : 3000;
@@ -52,6 +53,8 @@ app.get('/health', (_req: Request, res: Response) => {
 // the /api prefix from req.url depending on how the function is invoked.
 app.use('/api/v1/coffees', coffeesRouter);
 app.use('/v1/coffees', coffeesRouter);
+app.use('/api/v1/beans', beansRouter);
+app.use('/v1/beans', beansRouter);
 
 // On Vercel, return a JSON 404 so we can inspect req.url in the browser Network tab.
 // Remove this once routing is confirmed working.
