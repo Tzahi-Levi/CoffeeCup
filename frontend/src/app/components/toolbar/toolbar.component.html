@@ -1,9 +1,25 @@
 <header class="toolbar">
-  <div class="toolbar__brand">
-    <span class="toolbar__icon icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 3H6a1 1 0 0 0-1 1v8.5A6.5 6.5 0 0 0 11.5 19h1A6.5 6.5 0 0 0 19 12.5V9h.5a2.5 2.5 0 0 0 0-5H18.5V4a1 1 0 0 0-1-1zm-1 9.5A4.5 4.5 0 0 1 13 17h-2a4.5 4.5 0 0 1-4.5-4.5V5h11v7.5zm2-6H19V5h.5a.5.5 0 0 1 0 1zM4 19h16v2H4z"/></svg></span>
-    <div class="toolbar__text">
-      <h1 class="toolbar__title">CoffeeCup</h1>
-      <p class="toolbar__tagline">Your espresso settings library</p>
+  <div class="toolbar__inner">
+    <div class="toolbar__brand">
+      <span class="toolbar__icon icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 3H6a1 1 0 0 0-1 1v8.5A6.5 6.5 0 0 0 11.5 19h1A6.5 6.5 0 0 0 19 12.5V9h.5a2.5 2.5 0 0 0 0-5H18.5V4a1 1 0 0 0-1-1zm-1 9.5A4.5 4.5 0 0 1 13 17h-2a4.5 4.5 0 0 1-4.5-4.5V5h11v7.5zm2-6H19V5h.5a.5.5 0 0 1 0 1zM4 19h16v2H4z"/></svg></span>
+      <div class="toolbar__text">
+        <h1 class="toolbar__title">CoffeeCup</h1>
+        <p class="toolbar__tagline">Your espresso settings library</p>
+      </div>
     </div>
+
+    <nav class="toolbar__nav">
+      <a
+        class="toolbar__nav-link"
+        routerLink="/"
+        routerLinkActive="toolbar__nav-link--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >☕ Recipes</a>
+      <a
+        class="toolbar__nav-link"
+        routerLink="/maintenance"
+        routerLinkActive="toolbar__nav-link--active"
+      >🔧 Maintenance</a>
+    </nav>
   </div>
 </header>

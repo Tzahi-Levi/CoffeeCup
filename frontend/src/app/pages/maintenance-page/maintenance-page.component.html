@@ -1,0 +1,231 @@
+@if (vm$ | async; as vm) {
+<div class="mc-page">
+
+  <!-- ── Header ── -->
+  <header class="mc-header">
+    <h1 class="mc-header__title">Maintenance <span class="mc-header__accent">Concierge</span></h1>
+    <p class="mc-header__sub">Proactive hardware preservation for your espresso machine. Your daily ritual, protected by precision data.</p>
+  </header>
+
+  <!-- ── Top row ── -->
+  <div class="mc-top">
+
+    <!-- Service History Log -->
+    <div class="mc-card mc-card--history">
+      <div class="mc-history-header">
+        <h3 class="mc-history-title">
+          <span class="mc-history-title__icon">🕐</span> Service History Log
+        </h3>
+      </div>
+
+      @if (vm.historyEntries.length === 0) {
+        <div class="mc-history-empty">
+          <p class="mc-history-empty__line">No services logged yet.</p>
+          <p class="mc-history-empty__sub">Mark a ritual as done and it will appear here.</p>
+        </div>
+      }
+
+      <div class="mc-history-list">
+        @for (entry of (showAllHistory ? vm.historyEntries : vm.historyEntries.slice(0, HISTORY_PREVIEW)); track entry.id; let i = $index; let last = $last) {
+          <div class="mc-history-row"
+               [class.mc-history-row--last]="last && (showAllHistory || vm.historyEntries.length <= HISTORY_PREVIEW)"
+               [class.mc-history-row--new]="!showAllHistory || i < HISTORY_PREVIEW">
+            <div class="mc-history-row__icon" [class]="'mc-history-row__icon--' + entry.status">
+              <span>{{ entry.icon }}</span>
+            </div>
+            <div class="mc-history-row__body">
+              <p class="mc-history-row__name">{{ entry.name }}</p>
+              <p class="mc-history-row__sub">{{ historySubtitle(entry) }}</p>
+            </div>
+            <div class="mc-history-row__meta">
+              <span class="mc-history-row__date">{{ formatHistoryDate(entry.lastCompletedAt!) }}</span>
+              <span class="mc-history-row__status" [class]="'mc-history-row__status--' + entry.status">
+                {{ historyStatusLabel(entry) }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (vm.historyEntries.length > HISTORY_PREVIEW) {
+        <button class="mc-history-expand" (click)="showAllHistory = !showAllHistory">
+          @if (!showAllHistory) {
+            <span>View all {{ vm.historyEntries.length }} services</span>
+            <span class="mc-history-expand__arrow">↓</span>
+          } @else {
+            <span>Show less</span>
+            <span class="mc-history-expand__arrow mc-history-expand__arrow--up">↑</span>
+          }
+        </button>
+      }
+    </div>
+
+    <!-- Total Usage Card -->
+    <div class="mc-card mc-card--shots">
+      <span class="mc-card__eyebrow">TOTAL USAGE</span>
+      <div class="mc-shots">
+        @if (shotEditMode) {
+          <input
+            class="mc-shots__input"
+            type="number"
+            [(ngModel)]="shotEditValue"
+            min="0"
+            (blur)="commitShotEdit()"
+            (keydown)="onShotEditKeydown($event, vm.totalShots)"
+            autofocus
+          />
+        } @else {
+          <span class="mc-shots__num" (click)="startShotEdit(vm.totalShots)" title="Click to edit">
+            {{ vm.totalShots | number }}
+          </span>
+        }
+        <span class="mc-shots__unit">shots</span>
+      </div>
+      <div class="mc-shots-bar">
+        <div class="mc-shots-bar__fill" [style.width.%]="vm.tasks.length ? (100 - vm.healthIndex) : 0"></div>
+      </div>
+      <p class="mc-shots__hint">{{ vm.nextShotsLabel }}</p>
+      <div class="mc-counter">
+        <button class="mc-counter__btn" (click)="decrement(vm.totalShots)" [disabled]="vm.totalShots <= 0">−</button>
+        <button class="mc-counter__btn mc-counter__btn--plus" (click)="increment()">+</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Alerts row ── -->
+  <div class="mc-bottom">
+    <div class="mc-card mc-card--alerts">
+      <h3 class="mc-section-title">
+        <span class="mc-section-title__icon">⚠</span> Alerts
+      </h3>
+      @if (vm.alertTasks.length === 0) {
+        <p class="mc-alerts__empty">No alerts — machine is in great shape.</p>
+      }
+      @for (task of vm.alertTasks; track task.id) {
+        <div class="mc-alert-item" [class.mc-alert-item--overdue]="task.status === 'overdue'">
+          <div class="mc-alert-item__icon">{{ task.icon }}</div>
+          <div class="mc-alert-item__body">
+            <p class="mc-alert-item__name">{{ task.name }}</p>
+            <p class="mc-alert-item__desc">
+              @if (task.status === 'overdue') { Overdue — }
+              @if (task.status === 'due-soon') { Approaching — }
+              {{ timeLabel(task) }}
+            </p>
+            @if (task.status === 'overdue') {
+              <button class="mc-alert-item__cta" (click)="completeTask(task.id)">MARK DONE</button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ── Maintenance Rituals Grid ── -->
+  <div class="mc-card mc-card--roadmap">
+    <div class="mc-roadmap-header">
+      <div>
+        <h3 class="mc-section-title">Maintenance Rituals</h3>
+        <p class="mc-roadmap-sub">{{ vm.tasks.length }} rituals · {{ vm.overdueCount }} overdue · {{ vm.dueSoonCount }} due soon</p>
+      </div>
+      <button class="mc-add-btn" (click)="showAddForm ? cancelForm() : openAddForm()">
+        {{ showAddForm ? '✕ Cancel' : '+ Add Ritual' }}
+      </button>
+    </div>
+
+    <div class="mc-grid">
+      @for (task of vm.tasks; track task.id) {
+        <div class="mc-tile" [class]="'mc-tile--' + task.status">
+          <!-- Status accent bar -->
+          <div class="mc-tile__accent"></div>
+
+          <!-- Header: icon + status badge -->
+          <div class="mc-tile__top">
+            <span class="mc-tile__icon">{{ task.icon }}</span>
+            <span class="mc-tile__badge" [class]="'mc-tile__badge--' + task.status">
+              @if (task.status === 'ok') { ✓ OK }
+              @if (task.status === 'due-soon') { ⚠ Soon }
+              @if (task.status === 'overdue') { ● Overdue }
+            </span>
+          </div>
+
+          <!-- Name + interval -->
+          <p class="mc-tile__name">{{ task.name }}</p>
+          <p class="mc-tile__interval">Every {{ task.intervalValue }} {{ task.intervalType }}</p>
+
+          <!-- Progress bar + text -->
+          <div class="mc-tile__bar-track">
+            <div
+              class="mc-tile__bar-fill"
+              [class]="'mc-tile__bar-fill--' + task.status"
+              [style.width.%]="task.progressPercent > 100 ? 100 : task.progressPercent"
+            ></div>
+          </div>
+          <p class="mc-tile__progress">{{ progressText(task, vm.totalShots) }}</p>
+
+          <!-- Last done -->
+          <p class="mc-tile__last-done">{{ lastDoneLabel(task) }}</p>
+
+          <!-- Actions -->
+          <div class="mc-tile__actions">
+            <button class="mc-tile__mark-btn" (click)="completeTask(task.id)">Mark Done</button>
+            <button class="mc-tile__icon-btn" (click)="openEditForm(task)" title="Edit">✏️</button>
+            @if (!task.isPreset) {
+              <button class="mc-tile__icon-btn mc-tile__icon-btn--del" (click)="deleteTask(task.id)" title="Delete">🗑️</button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="mc-grid__empty">No rituals yet. Add one to get started.</p>
+      }
+    </div>
+  </div>
+
+  <!-- ── Add / Edit Form ── -->
+  @if (showAddForm) {
+    <div class="mc-card mc-form" [formGroup]="addForm">
+      <h3 class="mc-section-title">{{ editingTaskId ? 'Edit Task' : 'New Task' }}</h3>
+
+      <div class="mc-form__row">
+        <div class="mc-form__field mc-form__field--grow">
+          <label class="mc-form__label">Name</label>
+          <input class="mc-form__input" type="text" formControlName="name" placeholder="e.g. Group Head Cleaning" maxlength="60" />
+        </div>
+
+        <div class="mc-form__field">
+          <label class="mc-form__label">Interval</label>
+          <div class="mc-form__toggle">
+            @for (type of intervalTypes; track type) {
+              <button type="button" class="mc-form__toggle-btn" [class.mc-form__toggle-btn--on]="addForm.value.intervalType === type" (click)="addForm.patchValue({ intervalType: type })">
+                {{ type }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="mc-form__field">
+          <label class="mc-form__label">Every</label>
+          <input class="mc-form__input mc-form__input--short" type="number" formControlName="intervalValue" min="1" />
+        </div>
+      </div>
+
+      <div class="mc-form__field">
+        <label class="mc-form__label">Icon</label>
+        <div class="mc-form__icons">
+          @for (icon of iconOptions; track icon) {
+            <button type="button" class="mc-form__icon-btn" [class.mc-form__icon-btn--on]="addForm.value.icon === icon" (click)="selectIcon(icon)">{{ icon }}</button>
+          }
+        </div>
+      </div>
+
+      <div class="mc-form__actions">
+        <button type="button" class="mc-form__btn mc-form__btn--cancel" (click)="cancelForm()">Cancel</button>
+        <button type="button" class="mc-form__btn mc-form__btn--save" (click)="submitForm()" [disabled]="addForm.invalid">
+          {{ editingTaskId ? 'Save Changes' : 'Add Task' }}
+        </button>
+      </div>
+    </div>
+  }
+
+</div>
+}
