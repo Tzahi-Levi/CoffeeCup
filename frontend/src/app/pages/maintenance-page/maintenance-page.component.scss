@@ -278,15 +278,11 @@
   }
 }
 
-// ─── Bottom row ────────────────────────────────────────────────────────────
+// ─── Bottom row (alerts only) ──────────────────────────────────────────────
 .mc-bottom {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 1fr;
   gap: var(--space-4);
-
-  @media (max-width: 840px) {
-    grid-template-columns: 1fr;
-  }
 }
 
 .mc-section-title {
@@ -377,7 +373,7 @@
   }
 }
 
-// ─── Maintenance Roadmap ───────────────────────────────────────────────────
+// ─── Rituals Card ──────────────────────────────────────────────────────────
 .mc-card--roadmap {
   display: flex;
   flex-direction: column;
@@ -386,9 +382,15 @@
 
 .mc-roadmap-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+.mc-roadmap-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0 0;
 }
 
 .mc-add-btn {
@@ -399,10 +401,12 @@
   background: none;
   border: 1px solid var(--border-color-subtle);
   border-radius: var(--border-radius-full);
-  padding: 4px 12px;
+  padding: 4px 14px;
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 3px;
 
   &:hover {
     border-color: var(--border-color-accent);
@@ -410,129 +414,171 @@
   }
 }
 
-.mc-roadmap {
-  display: flex;
-  gap: var(--space-6);
-  overflow-x: auto;
-  padding-bottom: var(--space-2);
-  position: relative;
-  align-items: flex-start;
+// ─── 5-column ritual grid ──────────────────────────────────────────────────
+.mc-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-3);
 
-  &::-webkit-scrollbar { height: 3px; }
-  &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
-
-  // Horizontal connector line behind dots
-  &__line {
-    position: absolute;
-    top: 19px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--border-color-subtle);
-    z-index: 0;
-    pointer-events: none;
-  }
+  @media (max-width: 900px)  { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 600px)  { grid-template-columns: repeat(2, 1fr); }
 
   &__empty {
+    grid-column: 1 / -1;
     font-size: var(--font-size-sm);
     color: var(--color-text-muted);
-    margin: 0;
+    padding: var(--space-6) 0;
+    text-align: center;
   }
 }
 
-.mc-node {
+// ─── Ritual Tile ───────────────────────────────────────────────────────────
+.mc-tile {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: var(--space-2);
-  flex-shrink: 0;
-  min-width: 72px;
   position: relative;
-  z-index: 1;
-  cursor: default;
+  overflow: hidden;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 
-  &:hover .mc-node__actions { opacity: 1; }
+  &:hover { border-color: var(--border-color-accent); }
 
-  &__dot {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid var(--border-color);
-    background: var(--color-bg-elevated);
+  // Colored top accent bar
+  &__accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+  }
+
+  &--overdue  &__accent { background: var(--color-accent-bright); }
+  &--due-soon &__accent { background: #f0a020; }
+  &--ok       &__accent { background: #4caf82; }
+
+  // Subtle glow for urgent states
+  &--overdue  { box-shadow: 0 0 0 1px rgba(232,71,42,0.12); }
+  &--due-soon { box-shadow: 0 0 0 1px rgba(240,160,32,0.10); }
+
+  &__top {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    position: relative;
-
-    &:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 12px rgba(232,71,42,0.3);
-    }
+    justify-content: space-between;
+    padding-top: var(--space-1); // clear the accent bar
   }
 
-  &--overdue &__dot {
-    background: rgba(232,71,42,0.2);
-    border-color: var(--color-accent-bright);
-    box-shadow: 0 0 0 3px rgba(232,71,42,0.15);
-  }
+  &__icon { font-size: 1.5rem; line-height: 1; }
 
-  &--due-soon &__dot {
-    background: rgba(240,160,32,0.15);
-    border-color: #f0a020;
-    box-shadow: 0 0 0 3px rgba(240,160,32,0.1);
-  }
-
-  &--ok &__dot {
-    background: rgba(58,140,92,0.12);
-    border-color: #4caf82;
-  }
-
-  &__check { color: #4caf82; font-size: 1rem; }
-  &__emoji { line-height: 1; }
-
-  &__name {
+  &__badge {
     font-size: 0.6rem;
     font-weight: var(--font-weight-bold);
-    letter-spacing: 0.07em;
-    color: var(--color-text-secondary);
-    text-align: center;
-    max-width: 72px;
-    word-break: break-word;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: var(--border-radius-full);
+
+    &--ok       { background: rgba(58,140,92,0.15);  color: #4caf82; }
+    &--due-soon { background: rgba(240,160,32,0.15); color: #f0a020; }
+    &--overdue  { background: rgba(232,71,42,0.15);  color: var(--color-accent-bright); }
+  }
+
+  &__name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
     line-height: 1.2;
+    // Allow wrapping for long names
+    word-break: break-word;
   }
 
-  &__time {
-    font-size: 0.6rem;
+  &__interval {
+    font-size: var(--font-size-xs);
     color: var(--color-text-muted);
-    text-align: center;
-    white-space: nowrap;
+    margin: 0;
   }
 
-  &--overdue &__time { color: var(--color-accent-bright); }
-  &--due-soon &__time { color: #f0a020; }
+  &__bar-track {
+    height: 5px;
+    background: var(--color-bg-surface);
+    border-radius: var(--border-radius-full);
+    overflow: hidden;
+    margin-top: var(--space-1);
+  }
+
+  &__bar-fill {
+    height: 100%;
+    border-radius: inherit;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    min-width: 2px;
+
+    &--ok       { background: #4caf82; }
+    &--due-soon { background: #f0a020; }
+    &--overdue  { background: var(--color-accent-bright); }
+  }
+
+  &__progress {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__last-done {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin: 0 0 auto; // push actions to bottom
+    font-style: italic;
+  }
 
   &__actions {
     display: flex;
-    gap: 2px;
-    opacity: 0;
-    transition: opacity var(--transition-fast);
+    align-items: center;
+    gap: var(--space-1);
+    margin-top: var(--space-2);
   }
 
-  &__action-btn {
-    background: none;
-    border: none;
+  &__mark-btn {
+    flex: 1;
+    padding: var(--space-2) 0;
+    background: rgba(232,71,42,0.1);
+    border: 1px solid var(--border-color-accent);
+    border-radius: var(--border-radius-md);
+    color: var(--color-accent-bright);
+    font-family: var(--font-family-primary);
     font-size: 0.7rem;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.03em;
     cursor: pointer;
-    padding: 2px;
-    border-radius: 4px;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      color: var(--color-bg-deep);
+    }
+  }
+
+  &__icon-btn {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--border-color-subtle);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
     transition: background var(--transition-fast);
+    flex-shrink: 0;
 
     &:hover { background: var(--color-bg-overlay); }
-    &--del:hover { background: rgba(192,57,43,0.2); }
+    &--del:hover { background: rgba(192,57,43,0.15); }
   }
 }
 

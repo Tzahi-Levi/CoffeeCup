@@ -74,10 +74,8 @@
 
   </div>
 
-  <!-- ── Bottom row ── -->
+  <!-- ── Alerts row ── -->
   <div class="mc-bottom">
-
-    <!-- Alerts Panel -->
     <div class="mc-card mc-card--alerts">
       <h3 class="mc-section-title">
         <span class="mc-section-title__icon">⚠</span> Alerts
@@ -102,46 +100,66 @@
         </div>
       }
     </div>
+  </div>
 
-    <!-- Maintenance Roadmap -->
-    <div class="mc-card mc-card--roadmap">
-      <div class="mc-roadmap-header">
-        <h3 class="mc-section-title">Maintenance Roadmap</h3>
-        <button class="mc-add-btn" (click)="showAddForm ? cancelForm() : openAddForm()">
-          {{ showAddForm ? '✕ Cancel' : '+ Add Task' }}
-        </button>
+  <!-- ── Maintenance Rituals Grid ── -->
+  <div class="mc-card mc-card--roadmap">
+    <div class="mc-roadmap-header">
+      <div>
+        <h3 class="mc-section-title">Maintenance Rituals</h3>
+        <p class="mc-roadmap-sub">{{ vm.tasks.length }} rituals · {{ vm.overdueCount }} overdue · {{ vm.dueSoonCount }} due soon</p>
       </div>
-
-      <div class="mc-roadmap">
-        <div class="mc-roadmap__line"></div>
-        @for (task of vm.tasks; track task.id; let i = $index) {
-          <div class="mc-node" [class]="'mc-node--' + task.status">
-            <button
-              class="mc-node__dot"
-              (click)="completeTask(task.id)"
-              [title]="'Mark ' + task.name + ' done'"
-            >
-              @if (task.status === 'ok' && task.lastCompletedAt) {
-                <span class="mc-node__check">✓</span>
-              } @else {
-                <span class="mc-node__emoji">{{ task.icon }}</span>
-              }
-            </button>
-            <span class="mc-node__name">{{ task.name | uppercase }}</span>
-            <span class="mc-node__time">{{ timeLabel(task) }}</span>
-            <div class="mc-node__actions">
-              <button class="mc-node__action-btn" (click)="openEditForm(task)" title="Edit">✏️</button>
-              @if (!task.isPreset) {
-                <button class="mc-node__action-btn mc-node__action-btn--del" (click)="deleteTask(task.id)" title="Delete">🗑️</button>
-              }
-            </div>
-          </div>
-        } @empty {
-          <p class="mc-roadmap__empty">No tasks yet. Add one to get started.</p>
-        }
-      </div>
+      <button class="mc-add-btn" (click)="showAddForm ? cancelForm() : openAddForm()">
+        {{ showAddForm ? '✕ Cancel' : '+ Add Ritual' }}
+      </button>
     </div>
 
+    <div class="mc-grid">
+      @for (task of vm.tasks; track task.id) {
+        <div class="mc-tile" [class]="'mc-tile--' + task.status">
+          <!-- Status accent bar -->
+          <div class="mc-tile__accent"></div>
+
+          <!-- Header: icon + status badge -->
+          <div class="mc-tile__top">
+            <span class="mc-tile__icon">{{ task.icon }}</span>
+            <span class="mc-tile__badge" [class]="'mc-tile__badge--' + task.status">
+              @if (task.status === 'ok') { ✓ OK }
+              @if (task.status === 'due-soon') { ⚠ Soon }
+              @if (task.status === 'overdue') { ● Overdue }
+            </span>
+          </div>
+
+          <!-- Name + interval -->
+          <p class="mc-tile__name">{{ task.name }}</p>
+          <p class="mc-tile__interval">Every {{ task.intervalValue }} {{ task.intervalType }}</p>
+
+          <!-- Progress bar + text -->
+          <div class="mc-tile__bar-track">
+            <div
+              class="mc-tile__bar-fill"
+              [class]="'mc-tile__bar-fill--' + task.status"
+              [style.width.%]="task.progressPercent > 100 ? 100 : task.progressPercent"
+            ></div>
+          </div>
+          <p class="mc-tile__progress">{{ progressText(task, vm.totalShots) }}</p>
+
+          <!-- Last done -->
+          <p class="mc-tile__last-done">{{ lastDoneLabel(task) }}</p>
+
+          <!-- Actions -->
+          <div class="mc-tile__actions">
+            <button class="mc-tile__mark-btn" (click)="completeTask(task.id)">Mark Done</button>
+            <button class="mc-tile__icon-btn" (click)="openEditForm(task)" title="Edit">✏️</button>
+            @if (!task.isPreset) {
+              <button class="mc-tile__icon-btn mc-tile__icon-btn--del" (click)="deleteTask(task.id)" title="Delete">🗑️</button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="mc-grid__empty">No rituals yet. Add one to get started.</p>
+      }
+    </div>
   </div>
 
   <!-- ── Add / Edit Form ── -->
