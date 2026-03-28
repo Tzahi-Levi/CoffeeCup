@@ -149,6 +149,29 @@ export class MaintenancePageComponent implements OnInit {
     }
   }
 
+  progressText(task: MaintenanceTaskView, totalShots: number): string {
+    if (task.intervalType === 'shots') {
+      const consumed = Math.max(0, totalShots - (task.lastCompletedShots ?? 0));
+      return `${consumed} / ${task.intervalValue} shots`;
+    } else {
+      if (!task.lastCompletedAt) return `0 / ${task.intervalValue} days`;
+      const elapsed = Math.floor((Date.now() - new Date(task.lastCompletedAt).getTime()) / 86_400_000);
+      return `${elapsed} / ${task.intervalValue} days`;
+    }
+  }
+
+  lastDoneLabel(task: MaintenanceTaskView): string {
+    if (!task.lastCompletedAt) return 'Never done';
+    const ms = Date.now() - new Date(task.lastCompletedAt).getTime();
+    const hours = Math.floor(ms / 3_600_000);
+    if (hours < 1) return 'Just now';
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'Yesterday';
+    if (days < 30) return `${days} days ago`;
+    return `${Math.floor(days / 30)}mo ago`;
+  }
+
   systemStatus(healthIndex: number): string {
     if (healthIndex === 100) return 'SYSTEM OPTIMAL';
     if (healthIndex >= 80) return 'SYSTEM GOOD';
