@@ -35,6 +35,14 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 
+// Log every request on Vercel so we can see what URL the function receives
+if (process.env['VERCEL']) {
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    console.log(JSON.stringify({ level: 'debug', method: req.method, url: req.url }));
+    next();
+  });
+}
+
 // Health check
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
