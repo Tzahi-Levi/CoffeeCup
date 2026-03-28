@@ -53,6 +53,15 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use('/api/v1/coffees', coffeesRouter);
 app.use('/v1/coffees', coffeesRouter);
 
+// On Vercel, return a JSON 404 so we can inspect req.url in the browser Network tab.
+// Remove this once routing is confirmed working.
+if (process.env['VERCEL']) {
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    // Only intercept unmatched routes (no response sent yet)
+    res.status(404).json({ error: 'no route matched', url: req.url, method: req.method });
+  });
+}
+
 // On Vercel, static files are served by Vercel CDN directly.
 // Only serve static files and SPA fallback when running locally.
 if (!process.env['VERCEL']) {
