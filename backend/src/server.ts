@@ -48,8 +48,10 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API routes
+// API routes — mount at both paths because Vercel may or may not strip
+// the /api prefix from req.url depending on how the function is invoked.
 app.use('/api/v1/coffees', coffeesRouter);
+app.use('/v1/coffees', coffeesRouter);
 
 // On Vercel, static files are served by Vercel CDN directly.
 // Only serve static files and SPA fallback when running locally.
