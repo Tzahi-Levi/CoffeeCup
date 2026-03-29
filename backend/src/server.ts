@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import path from 'path';
 import { initDb } from './db';
+import { requireAuth } from './middleware';
 import coffeesRouter from './routes/coffees.router';
 import maintenanceRouter from './routes/maintenance.router';
 
@@ -21,7 +22,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'"],
+        connectSrc: ["'self'", 'https://*.supabase.co'],
       },
     },
   })
@@ -63,10 +64,10 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // API routes — mount at both paths because Vercel may or may not strip
 // the /api prefix from req.url depending on how the function is invoked.
-app.use('/api/v1/coffees', coffeesRouter);
-app.use('/v1/coffees', coffeesRouter);
-app.use('/api/v1/maintenance', maintenanceRouter);
-app.use('/v1/maintenance', maintenanceRouter);
+app.use('/api/v1/coffees', requireAuth, coffeesRouter);
+app.use('/v1/coffees', requireAuth, coffeesRouter);
+app.use('/api/v1/maintenance', requireAuth, maintenanceRouter);
+app.use('/v1/maintenance', requireAuth, maintenanceRouter);
 
 // On Vercel, return a JSON 404 so we can inspect req.url in the browser Network tab.
 // Remove this once routing is confirmed working.

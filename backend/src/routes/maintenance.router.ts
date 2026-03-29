@@ -19,23 +19,54 @@ function rowToTask(row: Record<string, unknown>): Record<string, unknown> {
   };
 }
 
-async function getTotalShots(): Promise<number> {
+async function getTotalShots(userId: string): Promise<number> {
   const result = await db.execute({
-    sql: `SELECT value FROM user_settings WHERE key = 'total_shots'`,
-    args: [],
+    sql: `SELECT value FROM user_settings WHERE key = 'total_shots' AND user_id = ?`,
+    args: [userId],
   });
   if (!result.rows.length) return 0;
   return parseInt((result.rows[0] as Record<string, unknown>)['value'] as string, 10) || 0;
 }
 
+const PRESET_TASKS: Array<{ icon: string; name: string; intervalType: string; intervalValue: number; sortOrder: number }> = [
+  { icon: '🔄', name: 'Backflush',         intervalType: 'shots', intervalValue: 10,  sortOrder: 0 },
+  { icon: '🧪', name: 'Descaling',          intervalType: 'days',  intervalValue: 30,  sortOrder: 1 },
+  { icon: '⚙️', name: 'Burr Replacement',   intervalType: 'shots', intervalValue: 500, sortOrder: 2 },
+  { icon: '🔧', name: 'Gasket Replacement', intervalType: 'days',  intervalValue: 180, sortOrder: 3 },
+  { icon: '🫧', name: 'Deep Clean',          intervalType: 'days',  intervalValue: 7,   sortOrder: 4 },
+];
+
+async function ensurePresets(userId: string): Promise<void> {
+  const countResult = await db.execute({
+    sql: 'SELECT COUNT(*) as count FROM maintenance_tasks WHERE user_id = ?',
+    args: [userId],
+  });
+  if ((countResult.rows[0] as Record<string, unknown>)['count'] !== 0) return;
+  const now = new Date().toISOString();
+  for (const p of PRESET_TASKS) {
+    await db.execute({
+      sql: `INSERT INTO maintenance_tasks
+        (id, name, icon, interval_type, interval_value, last_completed_at, last_completed_shots, is_preset, sort_order, user_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, NULL, NULL, 1, ?, ?, ?, ?)`,
+      args: [crypto.randomUUID(), p.name, p.icon, p.intervalType, p.intervalValue, p.sortOrder, userId, now, now],
+    });
+  }
+}
+
 // GET /tasks
 router.get('/tasks', async (_req: Request, res: Response) => {
-  const result = await db.execute('SELECT * FROM maintenance_tasks ORDER BY sort_order ASC');
+  const userId = res.locals['userId'] as string;
+  await ensurePresets(userId);
+  const result = await db.execute({
+    sql: 'SELECT * FROM maintenance_tasks WHERE user_id = ? ORDER BY sort_order ASC',
+    args: [userId],
+  });
   res.json({ data: result.rows.map(row => rowToTask(row as Record<string, unknown>)) });
 });
 
 // POST /tasks
 router.post('/tasks', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const body = req.body as Record<string, unknown>;
   if (!body['name'] || !body['icon'] || !body['intervalType'] || body['intervalValue'] == null) {
     res.status(400).json({ error: 'Missing required fields: name, icon, intervalType, intervalValue' });
@@ -43,12 +74,15 @@ router.post('/tasks', async (req: Request, res: Response) => {
   }
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
-  const maxOrderResult = await db.execute('SELECT MAX(sort_order) as max_order FROM maintenance_tasks');
+  const maxOrderResult = await db.execute({
+    sql: 'SELECT MAX(sort_order) as max_order FROM maintenance_tasks WHERE user_id = ?',
+    args: [userId],
+  });
   const maxOrder = ((maxOrderResult.rows[0] as Record<string, unknown>)['max_order'] as number | null) ?? -1;
   await db.execute({
     sql: `INSERT INTO maintenance_tasks
-      (id, name, icon, interval_type, interval_value, last_completed_at, last_completed_shots, is_preset, sort_order, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?, ?)`,
+      (id, name, icon, interval_type, interval_value, last_completed_at, last_completed_shots, is_preset, sort_order, user_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?, ?, ?)`,
     args: [
       id,
       body['name'] as string,
@@ -56,6 +90,7 @@ router.post('/tasks', async (req: Request, res: Response) => {
       body['intervalType'] as string,
       body['intervalValue'] as number,
       maxOrder + 1,
+      userId,
       now,
       now,
     ],
@@ -66,8 +101,12 @@ router.post('/tasks', async (req: Request, res: Response) => {
 
 // PUT /tasks/:id
 router.put('/tasks/:id', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const id = req.params['id'] as string;
-  const existing = await db.execute({ sql: 'SELECT * FROM maintenance_tasks WHERE id = ?', args: [id] });
+  const existing = await db.execute({
+    sql: 'SELECT * FROM maintenance_tasks WHERE id = ? AND user_id = ?',
+    args: [id, userId],
+  });
   if (!existing.rows.length) {
     res.status(404).json({ error: 'Maintenance task not found' });
     return;
@@ -78,7 +117,7 @@ router.put('/tasks/:id', async (req: Request, res: Response) => {
   await db.execute({
     sql: `UPDATE maintenance_tasks SET
       name = ?, icon = ?, interval_type = ?, interval_value = ?, updated_at = ?
-      WHERE id = ?`,
+      WHERE id = ? AND user_id = ?`,
     args: [
       (body['name'] as string) ?? row['name'],
       (body['icon'] as string) ?? row['icon'],
@@ -86,6 +125,7 @@ router.put('/tasks/:id', async (req: Request, res: Response) => {
       (body['intervalValue'] as number) ?? row['interval_value'],
       now,
       id,
+      userId,
     ],
   });
   const updated = await db.execute({ sql: 'SELECT * FROM maintenance_tasks WHERE id = ?', args: [id] });
@@ -94,8 +134,12 @@ router.put('/tasks/:id', async (req: Request, res: Response) => {
 
 // DELETE /tasks/:id
 router.delete('/tasks/:id', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const id = req.params['id'] as string;
-  const existing = await db.execute({ sql: 'SELECT * FROM maintenance_tasks WHERE id = ?', args: [id] });
+  const existing = await db.execute({
+    sql: 'SELECT * FROM maintenance_tasks WHERE id = ? AND user_id = ?',
+    args: [id, userId],
+  });
   if (!existing.rows.length) {
     res.status(404).json({ error: 'Maintenance task not found' });
     return;
@@ -105,23 +149,27 @@ router.delete('/tasks/:id', async (req: Request, res: Response) => {
     res.status(403).json({ error: 'Preset tasks cannot be deleted' });
     return;
   }
-  await db.execute({ sql: 'DELETE FROM maintenance_tasks WHERE id = ?', args: [id] });
+  await db.execute({ sql: 'DELETE FROM maintenance_tasks WHERE id = ? AND user_id = ?', args: [id, userId] });
   res.status(204).send();
 });
 
 // POST /tasks/:id/complete
 router.post('/tasks/:id/complete', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const id = req.params['id'] as string;
-  const existing = await db.execute({ sql: 'SELECT id FROM maintenance_tasks WHERE id = ?', args: [id] });
+  const existing = await db.execute({
+    sql: 'SELECT id FROM maintenance_tasks WHERE id = ? AND user_id = ?',
+    args: [id, userId],
+  });
   if (!existing.rows.length) {
     res.status(404).json({ error: 'Maintenance task not found' });
     return;
   }
-  const totalShots = await getTotalShots();
+  const totalShots = await getTotalShots(userId);
   const now = new Date().toISOString();
   await db.execute({
-    sql: `UPDATE maintenance_tasks SET last_completed_at = ?, last_completed_shots = ?, updated_at = ? WHERE id = ?`,
-    args: [now, totalShots, now, id],
+    sql: `UPDATE maintenance_tasks SET last_completed_at = ?, last_completed_shots = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
+    args: [now, totalShots, now, id, userId],
   });
   const updated = await db.execute({ sql: 'SELECT * FROM maintenance_tasks WHERE id = ?', args: [id] });
   res.json({ data: rowToTask(updated.rows[0] as Record<string, unknown>) });
@@ -129,23 +177,36 @@ router.post('/tasks/:id/complete', async (req: Request, res: Response) => {
 
 // GET /settings
 router.get('/settings', async (_req: Request, res: Response) => {
-  const totalShots = await getTotalShots();
+  const userId = res.locals['userId'] as string;
+  const totalShots = await getTotalShots(userId);
   res.json({ data: { totalShots } });
 });
 
 // PUT /settings
 router.put('/settings', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const body = req.body as Record<string, unknown>;
   if (body['totalShots'] == null || typeof body['totalShots'] !== 'number') {
     res.status(400).json({ error: 'Missing required field: totalShots (number)' });
     return;
   }
   const value = Math.max(0, Math.floor(body['totalShots'] as number));
-  await db.execute({
-    sql: `INSERT INTO user_settings (key, value) VALUES ('total_shots', ?)
-          ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-    args: [String(value)],
+  // user_settings PK is (key) which is global — use explicit SELECT → INSERT/UPDATE
+  const existing = await db.execute({
+    sql: `SELECT key FROM user_settings WHERE key = 'total_shots' AND user_id = ?`,
+    args: [userId],
   });
+  if (existing.rows.length) {
+    await db.execute({
+      sql: `UPDATE user_settings SET value = ? WHERE key = 'total_shots' AND user_id = ?`,
+      args: [String(value), userId],
+    });
+  } else {
+    await db.execute({
+      sql: `INSERT INTO user_settings (key, value, user_id) VALUES ('total_shots', ?, ?)`,
+      args: [String(value), userId],
+    });
+  }
   res.json({ data: { totalShots: value } });
 });
 

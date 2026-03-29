@@ -21,5 +21,12 @@
         routerLinkActive="toolbar__nav-link--active"
       >🔧 Maintenance</a>
     </nav>
+
+    <div class="toolbar__user">
+      @if (auth.user()) {
+        <span class="toolbar__user-email">{{ auth.user()?.email }}</span>
+        <button class="toolbar__signout" (click)="auth.signOut()" type="button">Sign out</button>
+      }
+    </div>
   </div>
 </header>

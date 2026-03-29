@@ -26,18 +26,22 @@ function rowToEntry(row: Record<string, unknown>): Record<string, unknown> {
 
 // GET /api/v1/coffees
 router.get('/', async (_req: Request, res: Response) => {
-  const result = await db.execute(
-    `SELECT c.*, ROUND(AVG(l.rating), 1) AS avg_rating
-     FROM coffee_entries c
-     LEFT JOIN brew_logs l ON l.coffee_id = c.id
-     GROUP BY c.id
-     ORDER BY c.created_at DESC`
-  );
+  const userId = res.locals['userId'] as string;
+  const result = await db.execute({
+    sql: `SELECT c.*, ROUND(AVG(l.rating), 1) AS avg_rating
+          FROM coffee_entries c
+          LEFT JOIN brew_logs l ON l.coffee_id = c.id
+          WHERE c.user_id = ?
+          GROUP BY c.id
+          ORDER BY c.created_at DESC`,
+    args: [userId],
+  });
   res.json({ data: result.rows.map(rowToEntry) });
 });
 
 // POST /api/v1/coffees
 router.post('/', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const body = req.body as Record<string, unknown>;
   if (!body['name'] || body['grindLevel'] == null || body['doseGrams'] == null || body['brewTimeSeconds'] == null) {
     res.status(400).json({ error: 'Missing required fields: name, grindLevel, doseGrams, brewTimeSeconds' });
@@ -47,8 +51,8 @@ router.post('/', async (req: Request, res: Response) => {
   const id = (body['id'] as string) ?? crypto.randomUUID();
   await db.execute({
     sql: `INSERT INTO coffee_entries
-      (id, name, origin, grind_level, dose_grams, brew_time_seconds, notes, roast_level, coffee_type, blend_components, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, name, origin, grind_level, dose_grams, brew_time_seconds, notes, roast_level, coffee_type, blend_components, user_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       body['name'] as string,
@@ -60,6 +64,7 @@ router.post('/', async (req: Request, res: Response) => {
       (body['roastLevel'] as string | null) ?? null,
       (body['coffeeType'] as string | null) ?? null,
       body['blendComponents'] ? JSON.stringify(body['blendComponents']) : '[]',
+      userId,
       now,
       now,
     ],
@@ -68,23 +73,24 @@ router.post('/', async (req: Request, res: Response) => {
     sql: `SELECT c.*, ROUND(AVG(l.rating), 1) AS avg_rating
           FROM coffee_entries c
           LEFT JOIN brew_logs l ON l.coffee_id = c.id
-          WHERE c.id = ?
+          WHERE c.id = ? AND c.user_id = ?
           GROUP BY c.id`,
-    args: [id],
+    args: [id, userId],
   });
   res.status(201).json({ data: rowToEntry(created.rows[0] as Record<string, unknown>) });
 });
 
 // GET /api/v1/coffees/:id
 router.get('/:id', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const id = req.params['id'] as string;
   const result = await db.execute({
     sql: `SELECT c.*, ROUND(AVG(l.rating), 1) AS avg_rating
           FROM coffee_entries c
           LEFT JOIN brew_logs l ON l.coffee_id = c.id
-          WHERE c.id = ?
+          WHERE c.id = ? AND c.user_id = ?
           GROUP BY c.id`,
-    args: [id],
+    args: [id, userId],
   });
   if (!result.rows.length) {
     res.status(404).json({ error: 'Coffee entry not found' });
@@ -95,8 +101,12 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 // PUT /api/v1/coffees/:id
 router.put('/:id', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const id = req.params['id'] as string;
-  const existing = await db.execute({ sql: 'SELECT id FROM coffee_entries WHERE id = ?', args: [id] });
+  const existing = await db.execute({
+    sql: 'SELECT id FROM coffee_entries WHERE id = ? AND user_id = ?',
+    args: [id, userId],
+  });
   if (!existing.rows.length) {
     res.status(404).json({ error: 'Coffee entry not found' });
     return;
@@ -107,7 +117,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     sql: `UPDATE coffee_entries SET
       name = ?, origin = ?, grind_level = ?, dose_grams = ?, brew_time_seconds = ?,
       notes = ?, roast_level = ?, coffee_type = ?, blend_components = ?, updated_at = ?
-      WHERE id = ?`,
+      WHERE id = ? AND user_id = ?`,
     args: [
       body['name'] as string,
       (body['origin'] as string | null) ?? null,
@@ -120,28 +130,33 @@ router.put('/:id', async (req: Request, res: Response) => {
       body['blendComponents'] ? JSON.stringify(body['blendComponents']) : '[]',
       now,
       id,
+      userId,
     ],
   });
   const updated = await db.execute({
     sql: `SELECT c.*, ROUND(AVG(l.rating), 1) AS avg_rating
           FROM coffee_entries c
           LEFT JOIN brew_logs l ON l.coffee_id = c.id
-          WHERE c.id = ?
+          WHERE c.id = ? AND c.user_id = ?
           GROUP BY c.id`,
-    args: [id],
+    args: [id, userId],
   });
   res.json({ data: rowToEntry(updated.rows[0] as Record<string, unknown>) });
 });
 
 // DELETE /api/v1/coffees/:id
 router.delete('/:id', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const id = req.params['id'] as string;
-  const existing = await db.execute({ sql: 'SELECT id FROM coffee_entries WHERE id = ?', args: [id] });
+  const existing = await db.execute({
+    sql: 'SELECT id FROM coffee_entries WHERE id = ? AND user_id = ?',
+    args: [id, userId],
+  });
   if (!existing.rows.length) {
     res.status(404).json({ error: 'Coffee entry not found' });
     return;
   }
-  await db.execute({ sql: 'DELETE FROM coffee_entries WHERE id = ?', args: [id] });
+  await db.execute({ sql: 'DELETE FROM coffee_entries WHERE id = ? AND user_id = ?', args: [id, userId] });
   res.status(204).send();
 });
 
@@ -163,7 +178,17 @@ function rowToLog(row: Record<string, unknown>): Record<string, unknown> {
 
 // GET /api/v1/coffees/:coffeeId/logs
 router.get('/:coffeeId/logs', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const coffeeId = req.params['coffeeId'] as string;
+  // Verify coffee ownership
+  const coffee = await db.execute({
+    sql: 'SELECT id FROM coffee_entries WHERE id = ? AND user_id = ?',
+    args: [coffeeId, userId],
+  });
+  if (!coffee.rows.length) {
+    res.status(404).json({ error: 'Coffee entry not found' });
+    return;
+  }
   const result = await db.execute({
     sql: 'SELECT * FROM brew_logs WHERE coffee_id = ? ORDER BY created_at DESC',
     args: [coffeeId],
@@ -173,8 +198,12 @@ router.get('/:coffeeId/logs', async (req: Request, res: Response) => {
 
 // POST /api/v1/coffees/:coffeeId/logs
 router.post('/:coffeeId/logs', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
   const coffeeId = req.params['coffeeId'] as string;
-  const coffee = await db.execute({ sql: 'SELECT id FROM coffee_entries WHERE id = ?', args: [coffeeId] });
+  const coffee = await db.execute({
+    sql: 'SELECT id FROM coffee_entries WHERE id = ? AND user_id = ?',
+    args: [coffeeId, userId],
+  });
   if (!coffee.rows.length) {
     res.status(404).json({ error: 'Coffee entry not found' });
     return;
@@ -206,7 +235,18 @@ router.post('/:coffeeId/logs', async (req: Request, res: Response) => {
 
 // DELETE /api/v1/coffees/:coffeeId/logs/:logId
 router.delete('/:coffeeId/logs/:logId', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
+  const coffeeId = req.params['coffeeId'] as string;
   const logId = req.params['logId'] as string;
+  // Verify coffee ownership before deleting log
+  const coffee = await db.execute({
+    sql: 'SELECT id FROM coffee_entries WHERE id = ? AND user_id = ?',
+    args: [coffeeId, userId],
+  });
+  if (!coffee.rows.length) {
+    res.status(404).json({ error: 'Coffee entry not found' });
+    return;
+  }
   const existing = await db.execute({ sql: 'SELECT id FROM brew_logs WHERE id = ?', args: [logId] });
   if (!existing.rows.length) {
     res.status(404).json({ error: 'Brew log not found' });

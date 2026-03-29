@@ -1,0 +1,83 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-card__brand">
+      <span class="auth-card__logo">☕</span>
+      <h1 class="auth-card__title">CoffeeCup</h1>
+    </div>
+
+    <div class="auth-card__tabs">
+      <button
+        class="auth-card__tab"
+        [class.auth-card__tab--active]="activeTab() === 'signin'"
+        (click)="setTab('signin')"
+        type="button"
+      >Sign In</button>
+      <button
+        class="auth-card__tab"
+        [class.auth-card__tab--active]="activeTab() === 'signup'"
+        (click)="setTab('signup')"
+        type="button"
+      >Create Account</button>
+    </div>
+
+    <div class="auth-card__oauth">
+      <button class="auth-card__oauth-btn" (click)="onGoogle()" type="button">
+        <span class="auth-card__oauth-icon">G</span>
+        Continue with Google
+      </button>
+      <button class="auth-card__oauth-btn" (click)="onGitHub()" type="button">
+        <span class="auth-card__oauth-icon">&#9650;</span>
+        Continue with GitHub
+      </button>
+    </div>
+
+    <div class="auth-card__divider">
+      <span>or</span>
+    </div>
+
+    <form class="auth-card__form" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="auth-card__field">
+        <label class="auth-card__label" for="email">Email</label>
+        <input
+          id="email"
+          class="auth-card__input"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="you@example.com"
+        />
+      </div>
+      <div class="auth-card__field">
+        <label class="auth-card__label" for="password">Password</label>
+        <input
+          id="password"
+          class="auth-card__input"
+          type="password"
+          formControlName="password"
+          [autocomplete]="activeTab() === 'signup' ? 'new-password' : 'current-password'"
+          placeholder="••••••••"
+        />
+      </div>
+
+      @if (errorMessage()) {
+        <p class="auth-card__error">{{ errorMessage() }}</p>
+      }
+
+      @if (successMessage()) {
+        <p class="auth-card__success">{{ successMessage() }}</p>
+      }
+
+      <button
+        class="auth-card__submit"
+        type="submit"
+        [disabled]="form.invalid || isLoading()"
+      >
+        @if (isLoading()) {
+          Loading…
+        } @else {
+          {{ activeTab() === 'signin' ? 'Sign In' : 'Create Account' }}
+        }
+      </button>
+    </form>
+  </div>
+</div>
