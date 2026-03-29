@@ -135,6 +135,15 @@ export class CoffeeService {
   }
 
   /**
+   * Triggers a fresh fetch of all coffee entries from the API.
+   * Use this after external mutations (e.g. brew log changes) that affect
+   * derived fields like the avg rating computed via JOIN.
+   */
+  refresh(): Observable<void> {
+    return this.loadAll();
+  }
+
+  /**
    * Fetches all coffee entries from the API and pushes them into the
    * BehaviorSubject cache.
    *

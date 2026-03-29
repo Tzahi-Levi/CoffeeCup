@@ -99,6 +99,7 @@ export class RecipeDetailPageComponent implements OnInit {
         this.logs = [res.data, ...this.logs];
         this.showLogForm = false;
         this.submitting = false;
+        this.coffeeService.refresh().subscribe();
       },
       error: err => {
         console.error('[RecipeDetail] Failed to save log', err);
@@ -109,7 +110,10 @@ export class RecipeDetailPageComponent implements OnInit {
 
   deleteLog(logId: string): void {
     this.brewLogService.deleteLog(this.coffeeId, logId).subscribe({
-      next: () => this.logs = this.logs.filter(l => l.id !== logId),
+      next: () => {
+        this.logs = this.logs.filter(l => l.id !== logId);
+        this.coffeeService.refresh().subscribe();
+      },
       error: err => console.error('[RecipeDetail] Failed to delete log', err),
     });
   }

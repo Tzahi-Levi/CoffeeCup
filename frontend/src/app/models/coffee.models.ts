@@ -51,7 +51,6 @@ export interface CoffeeEntryPayload {
   doseGrams: number;
   brewTimeSeconds: number;
   notes: string | null;
-  rating: number | null;
   roastLevel: RoastLevel | null;
   coffeeType: CoffeeType | null;
   blendComponents: BlendComponent[];
