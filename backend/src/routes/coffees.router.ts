@@ -122,4 +122,75 @@ router.delete('/:id', async (req: Request, res: Response) => {
   res.status(204).send();
 });
 
+// ── Brew Logs ──────────────────────────────────────────────────────────────
+
+function rowToLog(row: Record<string, unknown>): Record<string, unknown> {
+  return {
+    id: row['id'],
+    coffeeId: row['coffee_id'],
+    rating: row['rating'],
+    doseGrams: row['dose_grams'],
+    grindLevel: row['grind_level'],
+    brewTimeSeconds: row['brew_time_seconds'],
+    yieldGrams: row['yield_grams'] ?? null,
+    notes: row['notes'] ?? null,
+    createdAt: row['created_at'],
+  };
+}
+
+// GET /api/v1/coffees/:coffeeId/logs
+router.get('/:coffeeId/logs', async (req: Request, res: Response) => {
+  const coffeeId = req.params['coffeeId'] as string;
+  const result = await db.execute({
+    sql: 'SELECT * FROM brew_logs WHERE coffee_id = ? ORDER BY created_at DESC',
+    args: [coffeeId],
+  });
+  res.json({ data: result.rows.map(r => rowToLog(r as Record<string, unknown>)) });
+});
+
+// POST /api/v1/coffees/:coffeeId/logs
+router.post('/:coffeeId/logs', async (req: Request, res: Response) => {
+  const coffeeId = req.params['coffeeId'] as string;
+  const coffee = await db.execute({ sql: 'SELECT id FROM coffee_entries WHERE id = ?', args: [coffeeId] });
+  if (!coffee.rows.length) {
+    res.status(404).json({ error: 'Coffee entry not found' });
+    return;
+  }
+  const body = req.body as Record<string, unknown>;
+  if (body['rating'] == null || body['doseGrams'] == null || body['grindLevel'] == null || body['brewTimeSeconds'] == null) {
+    res.status(400).json({ error: 'Missing required fields: rating, doseGrams, grindLevel, brewTimeSeconds' });
+    return;
+  }
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  await db.execute({
+    sql: `INSERT INTO brew_logs (id, coffee_id, rating, dose_grams, grind_level, brew_time_seconds, yield_grams, notes, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      id, coffeeId,
+      body['rating'] as number,
+      body['doseGrams'] as number,
+      body['grindLevel'] as number,
+      body['brewTimeSeconds'] as number,
+      (body['yieldGrams'] as number | null) ?? null,
+      (body['notes'] as string | null) ?? null,
+      now,
+    ],
+  });
+  const created = await db.execute({ sql: 'SELECT * FROM brew_logs WHERE id = ?', args: [id] });
+  res.status(201).json({ data: rowToLog(created.rows[0] as Record<string, unknown>) });
+});
+
+// DELETE /api/v1/coffees/:coffeeId/logs/:logId
+router.delete('/:coffeeId/logs/:logId', async (req: Request, res: Response) => {
+  const logId = req.params['logId'] as string;
+  const existing = await db.execute({ sql: 'SELECT id FROM brew_logs WHERE id = ?', args: [logId] });
+  if (!existing.rows.length) {
+    res.status(404).json({ error: 'Brew log not found' });
+    return;
+  }
+  await db.execute({ sql: 'DELETE FROM brew_logs WHERE id = ?', args: [logId] });
+  res.status(204).send();
+});
+
 export default router;

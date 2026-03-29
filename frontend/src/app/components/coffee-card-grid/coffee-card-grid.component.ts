@@ -16,4 +16,5 @@ export class CoffeeCardGridComponent {
   @Input() coffees: CoffeeEntry[] = [];
   @Output() edit = new EventEmitter<string>();
   @Output() delete = new EventEmitter<string>();
+  @Output() view = new EventEmitter<string>();
 }

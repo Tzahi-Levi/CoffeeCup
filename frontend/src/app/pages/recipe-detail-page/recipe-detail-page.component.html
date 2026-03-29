@@ -1,0 +1,153 @@
+@if (coffee$ | async; as coffee) {
+  @if (coffee) {
+  <div class="rd-page">
+
+    <!-- Back nav -->
+    <a class="rd-back" routerLink="/">← Back to Library</a>
+
+    <!-- Recipe header -->
+    <div class="rd-header">
+      <div class="rd-header__left">
+        <h1 class="rd-header__name">{{ coffee.name }}</h1>
+        @if (coffee.origin) {
+          <p class="rd-header__origin">{{ coffee.origin }}</p>
+        }
+        <div class="rd-header__chips">
+          @if (coffee.roastLevel) {
+            <span class="rd-chip rd-chip--roast">{{ coffee.roastLevel }}</span>
+          }
+          @if (coffee.coffeeType) {
+            <span class="rd-chip rd-chip--type">{{ coffee.coffeeType === 'single-origin' ? 'Single Origin' : 'Blend' }}</span>
+          }
+        </div>
+      </div>
+      <a class="rd-header__edit-btn" [routerLink]="['/edit', coffee.id]">✏️ Edit Recipe</a>
+    </div>
+
+    <!-- Recipe stats -->
+    <div class="rd-stats">
+      <div class="rd-stat">
+        <span class="rd-stat__label">Grind</span>
+        <span class="rd-stat__value">{{ coffee.grindLevel }}<span class="rd-stat__unit">/30</span></span>
+      </div>
+      <div class="rd-stat">
+        <span class="rd-stat__label">Dose</span>
+        <span class="rd-stat__value">{{ coffee.doseGrams }}<span class="rd-stat__unit">g</span></span>
+      </div>
+      <div class="rd-stat">
+        <span class="rd-stat__label">Brew</span>
+        <span class="rd-stat__value">{{ coffee.brewTimeSeconds }}<span class="rd-stat__unit">s</span></span>
+      </div>
+      @if (logs.length) {
+        <div class="rd-stat rd-stat--sep">
+          <span class="rd-stat__label">Avg Shot</span>
+          <span class="rd-stat__value rd-stat__value--accent">{{ avgRating }}<span class="rd-stat__unit">★</span></span>
+        </div>
+        <div class="rd-stat">
+          <span class="rd-stat__label">Shots</span>
+          <span class="rd-stat__value">{{ logs.length }}</span>
+        </div>
+      }
+    </div>
+
+    @if (coffee.notes) {
+      <p class="rd-recipe-notes">{{ coffee.notes }}</p>
+    }
+
+    <!-- Log a Shot section -->
+    <div class="rd-log-section">
+      <div class="rd-log-section__header">
+        <h2 class="rd-log-section__title">Shot Log</h2>
+        @if (!showLogForm) {
+          <button class="rd-log-btn" (click)="openLogForm(coffee)">+ Log a Shot</button>
+        }
+      </div>
+
+      <!-- Log form -->
+      @if (showLogForm) {
+        <div class="rd-form">
+          <div class="rd-form__rating-row">
+            <span class="rd-form__label">Rating</span>
+            <app-star-rating
+              [rating]="logRating"
+              [readonly]="false"
+              (ratingChange)="logRating = $event"
+            />
+          </div>
+
+          <div class="rd-form__fields">
+            <div class="rd-form__field">
+              <label class="rd-form__label">Dose (g)</label>
+              <input class="rd-form__input" type="number" step="0.1" [(ngModel)]="logDose" />
+            </div>
+            <div class="rd-form__field">
+              <label class="rd-form__label">Grind</label>
+              <input class="rd-form__input" type="number" min="1" max="30" [(ngModel)]="logGrind" />
+            </div>
+            <div class="rd-form__field">
+              <label class="rd-form__label">Brew (s)</label>
+              <input class="rd-form__input" type="number" [(ngModel)]="logBrewTime" />
+            </div>
+            <div class="rd-form__field">
+              <label class="rd-form__label">Yield (g)</label>
+              <input class="rd-form__input" type="number" step="0.1" placeholder="optional" [(ngModel)]="logYield" />
+            </div>
+          </div>
+
+          <div class="rd-form__field rd-form__field--full">
+            <label class="rd-form__label">Notes</label>
+            <textarea class="rd-form__textarea" rows="3" placeholder="Tasting notes, adjustments…" [(ngModel)]="logNotes"></textarea>
+          </div>
+
+          <div class="rd-form__actions">
+            <button class="rd-form__btn rd-form__btn--cancel" (click)="cancelLogForm()">Cancel</button>
+            <button class="rd-form__btn rd-form__btn--save" (click)="submitLog()" [disabled]="submitting || logRating === 0">
+              {{ submitting ? 'Saving…' : 'Save Shot' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Shot history -->
+      @if (logs.length === 0 && !showLogForm) {
+        <div class="rd-empty">
+          <p class="rd-empty__line">No shots logged yet.</p>
+          <p class="rd-empty__sub">Hit "Log a Shot" after your next pull.</p>
+        </div>
+      }
+
+      @for (log of logs; track log.id) {
+        <div class="rd-log-entry">
+          <div class="rd-log-entry__top">
+            <app-star-rating [rating]="log.rating" [readonly]="true" />
+            <div class="rd-log-entry__meta-chips">
+              <span class="rd-log-chip">⚙️ {{ log.grindLevel }}</span>
+              <span class="rd-log-chip">⚖️ {{ log.doseGrams }}g</span>
+              <span class="rd-log-chip">⏱ {{ log.brewTimeSeconds }}s</span>
+              @if (log.yieldGrams) {
+                <span class="rd-log-chip">💧 {{ log.yieldGrams }}g</span>
+                <span class="rd-log-chip rd-log-chip--ratio">{{ ratioLabel(log) }}</span>
+              }
+            </div>
+            <div class="rd-log-entry__right">
+              <span class="rd-log-entry__date">{{ formatDate(log.createdAt) }}</span>
+              <button class="rd-log-entry__delete" (click)="deleteLog(log.id)" title="Delete">🗑️</button>
+            </div>
+          </div>
+          @if (log.notes) {
+            <p class="rd-log-entry__notes">{{ log.notes }}</p>
+          }
+        </div>
+      }
+    </div>
+
+  </div>
+  } @else {
+    <div class="rd-not-found">
+      <p>Recipe not found.</p>
+      <a routerLink="/">← Back to Library</a>
+    </div>
+  }
+} @else {
+  <div class="rd-loading">Loading…</div>
+}

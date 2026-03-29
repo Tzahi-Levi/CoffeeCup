@@ -47,6 +47,10 @@ export class LibraryPageComponent implements OnInit {
     this.router.navigate(['/edit', id]);
   }
 
+  onView(id: string): void {
+    this.router.navigate(['/recipes', id]);
+  }
+
   onDeleteRequest(id: string): void {
     this.pendingDeleteId = id;
   }

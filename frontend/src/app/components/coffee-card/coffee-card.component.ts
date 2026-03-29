@@ -16,6 +16,7 @@ export class CoffeeCardComponent {
   @Input({ required: true }) coffee!: CoffeeEntry;
   @Output() edit = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
+  @Output() view = new EventEmitter<void>();
   @HostBinding('@cardEnterLeave') animate = true;
 
   get truncatedNotes(): string {

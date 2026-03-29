@@ -80,6 +80,25 @@ export async function initDb(): Promise<void> {
     }
   }
 
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS brew_logs (
+      id TEXT PRIMARY KEY,
+      coffee_id TEXT NOT NULL,
+      rating INTEGER NOT NULL,
+      dose_grams REAL NOT NULL,
+      grind_level INTEGER NOT NULL,
+      brew_time_seconds INTEGER NOT NULL,
+      yield_grams REAL,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (coffee_id) REFERENCES coffee_entries(id) ON DELETE CASCADE
+    )
+  `);
+  await db.execute(`
+    CREATE INDEX IF NOT EXISTS idx_brew_logs_coffee_id
+    ON brew_logs (coffee_id, created_at DESC)
+  `);
+
   // Seed default total_shots setting if not present
   await db.execute({
     sql: `INSERT OR IGNORE INTO user_settings (key, value) VALUES ('total_shots', '0')`,
