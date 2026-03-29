@@ -27,6 +27,10 @@ const API_BASE = '/api/v1/coffees';
 export class CoffeeService {
   private readonly http = inject(HttpClient);
   private readonly _coffees$ = new BehaviorSubject<CoffeeEntry[]>([]);
+  private _loaded = false;
+
+  /** True once the initial API fetch has completed at least once. */
+  get isLoaded(): boolean { return this._loaded; }
 
   /**
    * Observable stream of all coffee entries.
@@ -152,7 +156,7 @@ export class CoffeeService {
   private loadAll(): Observable<void> {
     return this.http.get<ApiResponse<CoffeeEntry[]>>(API_BASE).pipe(
       map((response) => response.data),
-      tap((coffees) => this._coffees$.next(coffees)),
+      tap((coffees) => { this._coffees$.next(coffees); this._loaded = true; }),
       map(() => undefined),
       catchError((err) => {
         console.error('[CoffeeService] Failed to load coffees from API', err);
