@@ -6,7 +6,14 @@ import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private supabase: SupabaseClient = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
+  private supabase: SupabaseClient = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
+    auth: {
+      // The Web Locks API Supabase uses to serialize session access fails in
+      // sandboxed environments (Vercel preview iframes). A no-op lock keeps
+      // getSession() working; the tradeoff is no cross-tab refresh serialization.
+      lock: (_name: string, _acquireTimeout: number, fn: () => Promise<unknown>) => fn(),
+    },
+  });
 
   readonly session = signal<Session | null>(null);
   readonly user = signal<User | null>(null);
@@ -18,6 +25,9 @@ export class AuthService {
     this.supabase.auth.getSession().then(({ data }) => {
       this.session.set(data.session);
       this.user.set(data.session?.user ?? null);
+      this._ready$.next(true);
+    }).catch(() => {
+      // Ensure the guard never hangs even if getSession() rejects
       this._ready$.next(true);
     });
     this.supabase.auth.onAuthStateChange((_event, session) => {
