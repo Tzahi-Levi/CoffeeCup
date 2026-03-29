@@ -11,7 +11,7 @@ export class AuthService {
       // The Web Locks API Supabase uses to serialize session access fails in
       // sandboxed environments (Vercel preview iframes). A no-op lock keeps
       // getSession() working; the tradeoff is no cross-tab refresh serialization.
-      lock: (_name: string, _acquireTimeout: number, fn: () => Promise<unknown>) => fn(),
+      lock: <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>): Promise<R> => fn(),
     },
   });
 
