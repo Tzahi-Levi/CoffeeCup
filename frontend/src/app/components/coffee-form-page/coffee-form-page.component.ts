@@ -14,7 +14,6 @@ import { CoffeeService } from '../../services/coffee.service';
 import { CoffeeEntryPayload, RoastLevel, CoffeeType, BlendComponent } from '../../models/coffee.models';
 import { FormFieldComponent } from '../form-field/form-field.component';
 import { GrindSliderComponent } from '../grind-slider/grind-slider.component';
-import { StarRatingComponent } from '../star-rating/star-rating.component';
 
 /** Validates that all blend component percentages sum to exactly 100. */
 function blendTotalValidator(control: AbstractControl): ValidationErrors | null {
@@ -28,7 +27,7 @@ function blendTotalValidator(control: AbstractControl): ValidationErrors | null 
 @Component({
   selector: 'app-coffee-form-page',
   standalone: true,
-  imports: [ReactiveFormsModule, FormFieldComponent, GrindSliderComponent, StarRatingComponent],
+  imports: [ReactiveFormsModule, FormFieldComponent, GrindSliderComponent],
   templateUrl: './coffee-form-page.component.html',
   styleUrl: './coffee-form-page.component.scss'
 })
@@ -62,7 +61,6 @@ export class CoffeeFormPageComponent implements OnInit {
       doseGrams: [18, [Validators.required, Validators.min(1), Validators.max(50)]],
       brewTimeSeconds: [30, [Validators.required, Validators.min(5), Validators.max(120)]],
       notes: ['', Validators.maxLength(1000)],
-      rating: [null],
       roastLevel: new FormControl<RoastLevel | null>(null),
       coffeeType: new FormControl<CoffeeType | null>(null),
       blendComponents: this.fb.array([], blendTotalValidator)
@@ -81,7 +79,6 @@ export class CoffeeFormPageComponent implements OnInit {
           doseGrams: entry.doseGrams,
           brewTimeSeconds: entry.brewTimeSeconds,
           notes: entry.notes ?? '',
-          rating: entry.rating,
           roastLevel: entry.roastLevel ?? null,
           coffeeType: entry.coffeeType ?? null,
         });
@@ -149,10 +146,6 @@ export class CoffeeFormPageComponent implements OnInit {
     }
   }
 
-  onRatingChange(rating: number): void {
-    this.form.patchValue({ rating });
-  }
-
   getError(field: string): string {
     const ctrl = this.form.get(field);
     if (!ctrl || !ctrl.touched || ctrl.valid) return '';
@@ -192,7 +185,6 @@ export class CoffeeFormPageComponent implements OnInit {
       doseGrams: Number(raw['doseGrams']),
       brewTimeSeconds: Number(raw['brewTimeSeconds']),
       notes: raw['notes']?.trim() || null,
-      rating: raw['rating'] ? Number(raw['rating']) : null,
       roastLevel: raw['roastLevel'] ?? null,
       coffeeType: raw['coffeeType'] ?? null,
       blendComponents: ((raw['blendComponents'] ?? []) as { origin: string; percentage: number }[]).map((c) => ({

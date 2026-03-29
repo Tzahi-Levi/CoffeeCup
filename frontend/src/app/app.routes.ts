@@ -26,6 +26,14 @@ export const routes: Routes = [
     data: { animation: 'FormPage' }
   },
   {
+    path: 'recipes/:id',
+    loadComponent: () =>
+      import('./pages/recipe-detail-page/recipe-detail-page.component').then(
+        (m) => m.RecipeDetailPageComponent
+      ),
+    data: { animation: 'RecipeDetailPage' }
+  },
+  {
     path: 'maintenance',
     loadComponent: () =>
       import('./pages/maintenance-page/maintenance-page.component').then(

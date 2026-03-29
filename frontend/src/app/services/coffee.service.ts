@@ -27,6 +27,10 @@ const API_BASE = '/api/v1/coffees';
 export class CoffeeService {
   private readonly http = inject(HttpClient);
   private readonly _coffees$ = new BehaviorSubject<CoffeeEntry[]>([]);
+  private _loaded = false;
+
+  /** True once the initial API fetch has completed at least once. */
+  get isLoaded(): boolean { return this._loaded; }
 
   /**
    * Observable stream of all coffee entries.
@@ -135,6 +139,15 @@ export class CoffeeService {
   }
 
   /**
+   * Triggers a fresh fetch of all coffee entries from the API.
+   * Use this after external mutations (e.g. brew log changes) that affect
+   * derived fields like the avg rating computed via JOIN.
+   */
+  refresh(): Observable<void> {
+    return this.loadAll();
+  }
+
+  /**
    * Fetches all coffee entries from the API and pushes them into the
    * BehaviorSubject cache.
    *
@@ -143,7 +156,7 @@ export class CoffeeService {
   private loadAll(): Observable<void> {
     return this.http.get<ApiResponse<CoffeeEntry[]>>(API_BASE).pipe(
       map((response) => response.data),
-      tap((coffees) => this._coffees$.next(coffees)),
+      tap((coffees) => { this._coffees$.next(coffees); this._loaded = true; }),
       map(() => undefined),
       catchError((err) => {
         console.error('[CoffeeService] Failed to load coffees from API', err);

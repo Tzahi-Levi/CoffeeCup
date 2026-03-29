@@ -121,19 +121,6 @@
         </app-form-field>
       </div>
 
-      <app-form-field label="Rating" [errorMessage]="''">
-        <div class="form-page__rating-wrap">
-          <app-star-rating
-            [rating]="form.get('rating')?.value || 0"
-            [readonly]="false"
-            (ratingChange)="onRatingChange($event)"
-          />
-          @if (form.get('rating')?.value) {
-            <button type="button" class="form-page__clear-rating" (click)="onRatingChange(0)">Clear</button>
-          }
-        </div>
-      </app-form-field>
-
       <app-form-field label="Tasting Notes" [errorMessage]="getError('notes')">
         <textarea formControlName="notes" rows="4" placeholder="Describe the flavor profile, aroma, aftertaste..."></textarea>
       </app-form-field>
