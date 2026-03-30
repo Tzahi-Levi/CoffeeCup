@@ -27,8 +27,7 @@ function rowToEntry(row: Record<string, unknown>): Record<string, unknown> {
 // GET /api/v1/coffees
 router.get('/', async (_req: Request, res: Response) => {
   const userId = res.locals['userId'] as string;
-  console.log('[coffees] GET / userId:', JSON.stringify(userId));
-  const result = await db.execute({
+const result = await db.execute({
     sql: `SELECT c.*, ROUND(AVG(l.rating), 1) AS avg_rating
           FROM coffee_entries c
           LEFT JOIN brew_logs l ON l.coffee_id = c.id
