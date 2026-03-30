@@ -26,11 +26,13 @@
     "@libsql/client": "^0.14.0",
     "cors": "^2.8.5",
     "express": "^5.2.1",
-    "helmet": "^8.1.0"
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/jest": "^29.0.0",
     "@types/node": "^25.5.0",
     "@types/supertest": "^6.0.0",

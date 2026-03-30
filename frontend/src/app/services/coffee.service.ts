@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, EMPTY, Observable, combineLatest, map, tap, catchError, debounceTime, distinctUntilChanged } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, combineLatest, map, tap, catchError, debounceTime, distinctUntilChanged, filter, pairwise, startWith } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { CoffeeEntry, CoffeeEntryPayload } from '../models/coffee.models';
+import { AuthService } from './auth.service';
 
 /** Wrapper shape returned by all non-DELETE API endpoints. */
 interface ApiResponse<T> {
@@ -26,6 +28,7 @@ const API_BASE = '/api/v1/coffees';
 })
 export class CoffeeService {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
   private readonly _coffees$ = new BehaviorSubject<CoffeeEntry[]>([]);
   private _loaded = false;
 
@@ -43,8 +46,20 @@ export class CoffeeService {
   readonly coffees$: Observable<CoffeeEntry[]> = this._coffees$.asObservable();
 
   constructor() {
-    // Seed the local cache from the API on application startup.
-    this.loadAll().subscribe();
+    // Reload whenever the session transitions from null → authenticated.
+    // This covers: initial page load with an existing session, sign-in,
+    // and OAuth redirects. It also clears the cache on sign-out.
+    toObservable(this.auth.session).pipe(
+      startWith(null as unknown),
+      pairwise(),
+      filter(([prev, curr]) => {
+        // Reload when a token becomes available (null→session or token refresh)
+        if (!prev && curr) return true;
+        // Clear cache on sign-out (session→null)
+        if (prev && !curr) { this._coffees$.next([]); this._loaded = false; }
+        return false;
+      }),
+    ).subscribe(() => this.loadAll().subscribe());
   }
 
   /**

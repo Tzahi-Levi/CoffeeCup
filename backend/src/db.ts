@@ -9,6 +9,14 @@ export const db: Client = createClient({
   authToken: process.env['TURSO_AUTH_TOKEN'],
 });
 
+async function addCol(sql: string): Promise<void> {
+  try {
+    await db.execute(sql);
+  } catch (e: unknown) {
+    if (!(e instanceof Error) || !e.message?.includes('duplicate column')) throw e;
+  }
+}
+
 export async function initDb(): Promise<void> {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS coffee_entries (
@@ -59,27 +67,6 @@ export async function initDb(): Promise<void> {
     )
   `);
 
-  // Seed preset maintenance tasks if table is empty
-  const taskCount = await db.execute('SELECT COUNT(*) as count FROM maintenance_tasks');
-  if ((taskCount.rows[0] as Record<string, unknown>)['count'] === 0) {
-    const now = new Date().toISOString();
-    const presets: Array<{ icon: string; name: string; intervalType: string; intervalValue: number; sortOrder: number }> = [
-      { icon: '🔄', name: 'Backflush',         intervalType: 'shots', intervalValue: 10,  sortOrder: 0 },
-      { icon: '🧪', name: 'Descaling',          intervalType: 'days',  intervalValue: 30,  sortOrder: 1 },
-      { icon: '⚙️', name: 'Burr Replacement',   intervalType: 'shots', intervalValue: 500, sortOrder: 2 },
-      { icon: '🔧', name: 'Gasket Replacement', intervalType: 'days',  intervalValue: 180, sortOrder: 3 },
-      { icon: '🫧', name: 'Deep Clean',          intervalType: 'days',  intervalValue: 7,   sortOrder: 4 },
-    ];
-    for (const p of presets) {
-      await db.execute({
-        sql: `INSERT INTO maintenance_tasks
-          (id, name, icon, interval_type, interval_value, last_completed_at, last_completed_shots, is_preset, sort_order, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, NULL, NULL, 1, ?, ?, ?)`,
-        args: [crypto.randomUUID(), p.name, p.icon, p.intervalType, p.intervalValue, p.sortOrder, now, now],
-      });
-    }
-  }
-
   await db.execute(`
     CREATE TABLE IF NOT EXISTS brew_logs (
       id TEXT PRIMARY KEY,
@@ -99,9 +86,21 @@ export async function initDb(): Promise<void> {
     ON brew_logs (coffee_id, created_at DESC)
   `);
 
-  // Seed default total_shots setting if not present
-  await db.execute({
-    sql: `INSERT OR IGNORE INTO user_settings (key, value) VALUES ('total_shots', '0')`,
-    args: [],
-  });
+  // Additive migrations — add user_id columns if not already present
+  await addCol(`ALTER TABLE coffee_entries ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`);
+  await addCol(`ALTER TABLE maintenance_tasks ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`);
+  await addCol(`ALTER TABLE user_settings ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`);
+
+  await db.execute(`
+    CREATE INDEX IF NOT EXISTS idx_coffee_entries_user_id
+    ON coffee_entries (user_id)
+  `);
+  await db.execute(`
+    CREATE INDEX IF NOT EXISTS idx_maintenance_tasks_user_id
+    ON maintenance_tasks (user_id)
+  `);
+  await db.execute(`
+    CREATE INDEX IF NOT EXISTS idx_user_settings_user_id
+    ON user_settings (user_id)
+  `);
 }
