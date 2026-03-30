@@ -16,11 +16,11 @@ async function fetchPublicKey(kid?: string): Promise<string> {
   const res = await fetch(`${supabaseUrl}/auth/v1/.well-known/jwks.json`);
   if (!res.ok) throw new Error(`JWKS fetch failed: ${res.status}`);
 
-  const { keys } = await res.json() as { keys: Record<string, unknown>[] };
+  const { keys } = await res.json() as { keys: any[] };
   const jwk = kid ? keys.find(k => k['kid'] === kid) : keys[0];
   if (!jwk) throw new Error(`No matching key in JWKS${kid ? ` (kid=${kid})` : ''}`);
 
-  const pem = createPublicKey({ key: jwk as Parameters<typeof createPublicKey>[0], format: 'jwk' })
+  const pem = createPublicKey({ key: jwk, format: 'jwk' })
     .export({ type: 'spki', format: 'pem' }) as string;
 
   keyCache.set(cacheKey, pem);
