@@ -45,6 +45,7 @@ export class MaintenancePageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.maintenanceService.loadSettings();
     this.vm$ = combineLatest([
       this.maintenanceService.tasks$,
       this.maintenanceService.settings$,
