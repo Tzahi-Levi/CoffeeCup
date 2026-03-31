@@ -1,0 +1,38 @@
+@if (wt.visible()) {
+  <div class="wt-backdrop" (click)="skip()">
+    <div class="wt-card" (click)="$event.stopPropagation()">
+
+      <button class="wt-skip" (click)="skip()" aria-label="Skip walkthrough">
+        Skip
+      </button>
+
+      <div class="wt-body">
+        <div class="wt-icon">{{ step().icon }}</div>
+        <h2 class="wt-title">{{ step().title }}</h2>
+        <p class="wt-desc">{{ step().description }}</p>
+      </div>
+
+      <div class="wt-dots">
+        @for (dot of dots; track dot) {
+          <span
+            class="wt-dot"
+            [class.wt-dot--active]="dot === wt.currentStep()"
+          ></span>
+        }
+      </div>
+
+      <div class="wt-actions">
+        @if (!isFirst()) {
+          <button class="wt-btn wt-btn--ghost" (click)="prev()">Back</button>
+        } @else {
+          <span></span>
+        }
+
+        <button class="wt-btn wt-btn--primary" (click)="next()">
+          {{ isLast() ? 'Get started' : 'Next' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
