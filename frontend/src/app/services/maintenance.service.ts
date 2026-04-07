@@ -32,7 +32,7 @@ export class MaintenanceService {
     });
   }
 
-  private loadSettings(): void {
+  loadSettings(): void {
     this.http.get<{ data: MaintenanceSettings }>(`${API_BASE}/settings`).subscribe({
       next: res => this._settings$.next(res.data),
       error: err => console.error('Failed to load maintenance settings', err),

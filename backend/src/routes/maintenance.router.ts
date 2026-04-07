@@ -20,12 +20,22 @@ function rowToTask(row: Record<string, unknown>): Record<string, unknown> {
 }
 
 async function getTotalShots(userId: string): Promise<number> {
+  const scopedKey = `total_shots:${userId}`;
   const result = await db.execute({
-    sql: `SELECT value FROM user_settings WHERE key = 'total_shots' AND user_id = ?`,
-    args: [userId],
+    sql: `SELECT value FROM user_settings WHERE key = ?`,
+    args: [scopedKey],
   });
-  if (!result.rows.length) return 0;
-  return parseInt((result.rows[0] as Record<string, unknown>)['value'] as string, 10) || 0;
+  if (result.rows.length) {
+    return parseInt((result.rows[0] as Record<string, unknown>)['value'] as string, 10) || 0;
+  }
+  // Fallback: read legacy key (pre-auth rows with user_id='') so existing data is not lost
+  const legacy = await db.execute({
+    sql: `SELECT value FROM user_settings WHERE key = 'total_shots'`,
+    args: [],
+  });
+  return legacy.rows.length
+    ? parseInt((legacy.rows[0] as Record<string, unknown>)['value'] as string, 10) || 0
+    : 0;
 }
 
 const PRESET_TASKS: Array<{ icon: string; name: string; intervalType: string; intervalValue: number; sortOrder: number }> = [
@@ -191,20 +201,21 @@ router.put('/settings', async (req: Request, res: Response) => {
     return;
   }
   const value = Math.max(0, Math.floor(body['totalShots'] as number));
-  // user_settings PK is (key) which is global — use explicit SELECT → INSERT/UPDATE
+  // Use a user-scoped key to avoid the global `key TEXT PRIMARY KEY` conflict
+  const scopedKey = `total_shots:${userId}`;
   const existing = await db.execute({
-    sql: `SELECT key FROM user_settings WHERE key = 'total_shots' AND user_id = ?`,
-    args: [userId],
+    sql: `SELECT key FROM user_settings WHERE key = ?`,
+    args: [scopedKey],
   });
   if (existing.rows.length) {
     await db.execute({
-      sql: `UPDATE user_settings SET value = ? WHERE key = 'total_shots' AND user_id = ?`,
-      args: [String(value), userId],
+      sql: `UPDATE user_settings SET value = ? WHERE key = ?`,
+      args: [String(value), scopedKey],
     });
   } else {
     await db.execute({
-      sql: `INSERT INTO user_settings (key, value, user_id) VALUES ('total_shots', ?, ?)`,
-      args: [String(value), userId],
+      sql: `INSERT INTO user_settings (key, value, user_id) VALUES (?, ?, ?)`,
+      args: [scopedKey, String(value), userId],
     });
   }
   res.json({ data: { totalShots: value } });

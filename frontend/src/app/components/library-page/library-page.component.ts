@@ -5,6 +5,8 @@ import { Observable, skip, take } from 'rxjs';
 import { CoffeeEntry } from '../../models/coffee.models';
 import { CoffeeService } from '../../services/coffee.service';
 import { SearchService } from '../../services/search.service';
+import { AuthService } from '../../services/auth.service';
+import { WalkthroughService } from '../../services/walkthrough.service';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { CoffeeCardGridComponent } from '../coffee-card-grid/coffee-card-grid.component';
 import { FabButtonComponent } from '../fab-button/fab-button.component';
@@ -25,11 +27,18 @@ export class LibraryPageComponent implements OnInit {
   constructor(
     private coffeeService: CoffeeService,
     private searchService: SearchService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService,
+    private walkthroughService: WalkthroughService,
   ) {}
 
   ngOnInit(): void {
     this.filteredCoffees$ = this.coffeeService.filteredCoffees$(this.searchService.query$);
+
+    const userId = this.authService.user()?.id;
+    if (userId) {
+      this.walkthroughService.checkAndShow(userId);
+    }
 
     // If data is already in the cache (returning from another route), hide the
     // spinner immediately. On first load, skip the BehaviorSubject's initial []

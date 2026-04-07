@@ -104,3 +104,28 @@ export async function initDb(): Promise<void> {
     ON user_settings (user_id)
   `);
 }
+
+/** Increment (+1) or decrement (-1) the total_shots counter for a user. Never goes below 0.
+ *  Uses a user-scoped key `total_shots:{userId}` to avoid the global `key TEXT PRIMARY KEY` conflict. */
+export async function adjustTotalShots(userId: string, delta: 1 | -1): Promise<void> {
+  const scopedKey = `total_shots:${userId}`;
+  const result = await db.execute({
+    sql: `SELECT value FROM user_settings WHERE key = ?`,
+    args: [scopedKey],
+  });
+  const current = result.rows.length
+    ? parseInt((result.rows[0] as Record<string, unknown>)['value'] as string, 10) || 0
+    : 0;
+  const next = Math.max(0, current + delta);
+  if (result.rows.length) {
+    await db.execute({
+      sql: `UPDATE user_settings SET value = ? WHERE key = ?`,
+      args: [String(next), scopedKey],
+    });
+  } else {
+    await db.execute({
+      sql: `INSERT INTO user_settings (key, value, user_id) VALUES (?, ?, ?)`,
+      args: [scopedKey, String(next), userId],
+    });
+  }
+}

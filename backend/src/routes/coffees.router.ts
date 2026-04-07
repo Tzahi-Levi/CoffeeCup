@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { db } from '../db';
+import { db, adjustTotalShots } from '../db';
 
 const router = Router();
 
@@ -230,6 +230,7 @@ router.post('/:coffeeId/logs', async (req: Request, res: Response) => {
     ],
   });
   const created = await db.execute({ sql: 'SELECT * FROM brew_logs WHERE id = ?', args: [id] });
+  await adjustTotalShots(userId, 1);
   res.status(201).json({ data: rowToLog(created.rows[0] as Record<string, unknown>) });
 });
 
@@ -253,6 +254,7 @@ router.delete('/:coffeeId/logs/:logId', async (req: Request, res: Response) => {
     return;
   }
   await db.execute({ sql: 'DELETE FROM brew_logs WHERE id = ?', args: [logId] });
+  await adjustTotalShots(userId, -1);
   res.status(204).send();
 });
 
