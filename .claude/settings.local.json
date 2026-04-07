@@ -4,7 +4,11 @@
       "Bash(npm init:*)",
       "Bash(npx:*)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(git:*)",
+      "Bash(xargs sh:*)",
+      "Bash(read ref:*)",
+      "Bash(node -e \"const p=require\\(''./package.json''\\); console.log\\(''@angular/core:'', p.dependencies[''@angular/core'']\\)\")"
     ]
   }
 }
