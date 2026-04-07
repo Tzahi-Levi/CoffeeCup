@@ -6,8 +6,181 @@
         Skip
       </button>
 
+      <!-- CSS mockup preview -->
+      <div class="wt-preview">
+        @switch (wt.currentStep()) {
+
+          @case (0) {
+            <!-- Welcome: mini app shell -->
+            <div class="mock mock-welcome">
+              <div class="mock-toolbar">
+                <span class="mock-logo">☕ CoffeeCup</span>
+                <div class="mock-toolbar-actions">
+                  <span class="mock-pill"></span>
+                  <span class="mock-pill mock-pill--sm"></span>
+                </div>
+              </div>
+              <div class="mock-welcome-body">
+                <span class="mock-welcome-icon">☕</span>
+                <span class="mock-welcome-tagline"></span>
+                <span class="mock-welcome-sub"></span>
+              </div>
+            </div>
+          }
+
+          @case (1) {
+            <!-- Library: card grid -->
+            <div class="mock mock-library">
+              <div class="mock-searchbar">
+                <span class="mock-search-icon">🔍</span>
+                <span class="mock-search-text"></span>
+              </div>
+              <div class="mock-card-grid">
+                <div class="mock-coffee-card">
+                  <div class="mock-card-header">
+                    <span class="mock-card-name"></span>
+                    <span class="mock-card-origin"></span>
+                  </div>
+                  <div class="mock-card-stats">
+                    <span class="mock-stat">⚙️ <span></span></span>
+                    <span class="mock-stat">⚖️ <span></span></span>
+                    <span class="mock-stat">⏱️ <span></span></span>
+                  </div>
+                  <div class="mock-card-stars">★★★★☆</div>
+                </div>
+                <div class="mock-coffee-card">
+                  <div class="mock-card-header">
+                    <span class="mock-card-name mock-card-name--alt"></span>
+                    <span class="mock-card-origin mock-card-origin--alt"></span>
+                  </div>
+                  <div class="mock-card-stats">
+                    <span class="mock-stat">⚙️ <span></span></span>
+                    <span class="mock-stat">⚖️ <span></span></span>
+                    <span class="mock-stat">⏱️ <span></span></span>
+                  </div>
+                  <div class="mock-card-stars">★★★☆☆</div>
+                </div>
+              </div>
+              <div class="mock-fab">+</div>
+            </div>
+          }
+
+          @case (2) {
+            <!-- Add Recipe: form -->
+            <div class="mock mock-form">
+              <div class="mock-form-title"></div>
+              <div class="mock-field">
+                <span class="mock-label"></span>
+                <span class="mock-input"></span>
+              </div>
+              <div class="mock-field-row">
+                <div class="mock-field mock-field--half">
+                  <span class="mock-label"></span>
+                  <span class="mock-input"></span>
+                </div>
+                <div class="mock-field mock-field--half">
+                  <span class="mock-label"></span>
+                  <span class="mock-input"></span>
+                </div>
+              </div>
+              <div class="mock-field">
+                <span class="mock-label"></span>
+                <div class="mock-slider-track">
+                  <div class="mock-slider-fill"></div>
+                  <div class="mock-slider-thumb"></div>
+                </div>
+              </div>
+              <div class="mock-form-stars">★★★☆☆</div>
+              <div class="mock-save-btn"></div>
+            </div>
+          }
+
+          @case (3) {
+            <!-- Brew logs: detail page -->
+            <div class="mock mock-detail">
+              <div class="mock-detail-header">
+                <span class="mock-detail-name"></span>
+                <div class="mock-detail-badges">
+                  <span class="mock-badge"></span>
+                  <span class="mock-badge mock-badge--alt"></span>
+                </div>
+              </div>
+              <div class="mock-log-section">
+                <span class="mock-log-title"></span>
+                <div class="mock-log-entry">
+                  <span class="mock-log-dot mock-log-dot--accent"></span>
+                  <span class="mock-log-bar"></span>
+                  <span class="mock-log-time"></span>
+                </div>
+                <div class="mock-log-entry">
+                  <span class="mock-log-dot"></span>
+                  <span class="mock-log-bar mock-log-bar--alt"></span>
+                  <span class="mock-log-time"></span>
+                </div>
+                <div class="mock-log-entry">
+                  <span class="mock-log-dot"></span>
+                  <span class="mock-log-bar mock-log-bar--sm"></span>
+                  <span class="mock-log-time"></span>
+                </div>
+              </div>
+              <div class="mock-log-add">+ Log brew</div>
+            </div>
+          }
+
+          @case (4) {
+            <!-- Maintenance: task cards -->
+            <div class="mock mock-maintenance">
+              <div class="mock-maint-title"></div>
+              <div class="mock-maint-card">
+                <div class="mock-maint-left">
+                  <span class="mock-maint-icon">🧹</span>
+                  <div class="mock-maint-info">
+                    <span class="mock-maint-name"></span>
+                    <span class="mock-maint-due mock-maint-due--ok"></span>
+                  </div>
+                </div>
+                <span class="mock-check mock-check--done">✓</span>
+              </div>
+              <div class="mock-maint-card">
+                <div class="mock-maint-left">
+                  <span class="mock-maint-icon">⚙️</span>
+                  <div class="mock-maint-info">
+                    <span class="mock-maint-name mock-maint-name--alt"></span>
+                    <span class="mock-maint-due mock-maint-due--warn"></span>
+                  </div>
+                </div>
+                <span class="mock-check">○</span>
+              </div>
+              <div class="mock-maint-card">
+                <div class="mock-maint-left">
+                  <span class="mock-maint-icon">💧</span>
+                  <div class="mock-maint-info">
+                    <span class="mock-maint-name"></span>
+                    <span class="mock-maint-due mock-maint-due--ok"></span>
+                  </div>
+                </div>
+                <span class="mock-check mock-check--done">✓</span>
+              </div>
+            </div>
+          }
+
+          @case (5) {
+            <!-- All set: celebration -->
+            <div class="mock mock-allset">
+              <div class="mock-allset-ring">
+                <span class="mock-allset-emoji">🚀</span>
+              </div>
+              <div class="mock-allset-lines">
+                <span class="mock-allset-line"></span>
+                <span class="mock-allset-line mock-allset-line--sm"></span>
+              </div>
+            </div>
+          }
+
+        }
+      </div>
+
       <div class="wt-body">
-        <div class="wt-icon">{{ step().icon }}</div>
         <h2 class="wt-title">{{ step().title }}</h2>
         <p class="wt-desc">{{ step().description }}</p>
       </div>
