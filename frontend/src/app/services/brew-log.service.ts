@@ -1,23 +1,29 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { BrewLog, BrewLogPayload } from '../models/brew-log.models';
+import { MaintenanceService } from './maintenance.service';
 
 const API_BASE = '/api/v1/coffees';
 
 @Injectable({ providedIn: 'root' })
 export class BrewLogService {
   private readonly http = inject(HttpClient);
+  private readonly maintenanceService = inject(MaintenanceService);
 
   getLogs(coffeeId: string): Observable<{ data: BrewLog[] }> {
     return this.http.get<{ data: BrewLog[] }>(`${API_BASE}/${coffeeId}/logs`);
   }
 
   addLog(coffeeId: string, payload: BrewLogPayload): Observable<{ data: BrewLog }> {
-    return this.http.post<{ data: BrewLog }>(`${API_BASE}/${coffeeId}/logs`, payload);
+    return this.http.post<{ data: BrewLog }>(`${API_BASE}/${coffeeId}/logs`, payload).pipe(
+      tap(() => this.maintenanceService.loadSettings())
+    );
   }
 
   deleteLog(coffeeId: string, logId: string): Observable<void> {
-    return this.http.delete<void>(`${API_BASE}/${coffeeId}/logs/${logId}`);
+    return this.http.delete<void>(`${API_BASE}/${coffeeId}/logs/${logId}`).pipe(
+      tap(() => this.maintenanceService.loadSettings())
+    );
   }
 }
