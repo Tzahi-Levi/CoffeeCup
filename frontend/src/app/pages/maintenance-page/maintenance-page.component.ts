@@ -159,8 +159,14 @@ export class MaintenancePageComponent implements OnInit {
 
   progressText(task: MaintenanceTaskView, totalShots: number): string {
     if (task.intervalType === 'shots') {
-      const consumed = Math.max(0, totalShots - (task.lastCompletedShots ?? 0));
-      return `${consumed} / ${task.intervalValue} shots`;
+      const baseline = task.lastCompletedShots ?? 0;
+      const elapsed = totalShots - baseline;
+      if (elapsed < 0) {
+        // Total fell below completion baseline — show how many shots remain until due
+        const remaining = task.intervalValue - elapsed; // e.g. 5 - (-4) = 9; updates as shots increase
+        return `${remaining} shots until next`;
+      }
+      return `${elapsed} / ${task.intervalValue} shots`;
     } else {
       if (!task.lastCompletedAt) return `0 / ${task.intervalValue} days`;
       const elapsed = Math.floor((Date.now() - new Date(task.lastCompletedAt).getTime()) / 86_400_000);

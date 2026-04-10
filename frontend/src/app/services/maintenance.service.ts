@@ -83,9 +83,10 @@ export class MaintenanceService {
     if (task.intervalType === 'shots') {
       const baseline = task.lastCompletedShots ?? 0;
       const elapsed = totalShots - baseline;
-      progressPercent = Math.round((elapsed / task.intervalValue) * 100);
-      const remaining = task.intervalValue - elapsed;
-      shotsUntilNext = remaining;
+      // Clamp to 0 if total fell below the completion baseline (e.g. after data migration or log deletions)
+      progressPercent = Math.max(0, Math.round((elapsed / task.intervalValue) * 100));
+      // shotsUntilNext uses raw elapsed so it correctly reflects how many shots until next due
+      shotsUntilNext = task.intervalValue - elapsed;
 
       if (progressPercent >= 100) {
         status = 'overdue';

@@ -106,18 +106,34 @@ export async function initDb(): Promise<void> {
 }
 
 /** Increment (+1) or decrement (-1) the total_shots counter for a user. Never goes below 0.
- *  Uses a user-scoped key `total_shots:{userId}` to avoid the global `key TEXT PRIMARY KEY` conflict. */
+ *  Uses a user-scoped key `total_shots:{userId}` to avoid the global `key TEXT PRIMARY KEY` conflict.
+ *  Falls back to the legacy `total_shots` key as the starting value when the scoped key doesn't exist
+ *  yet, so pre-auth shot history is preserved on first brew log after auth migration. */
 export async function adjustTotalShots(userId: string, delta: 1 | -1): Promise<void> {
   const scopedKey = `total_shots:${userId}`;
   const result = await db.execute({
     sql: `SELECT value FROM user_settings WHERE key = ?`,
     args: [scopedKey],
   });
-  const current = result.rows.length
-    ? parseInt((result.rows[0] as Record<string, unknown>)['value'] as string, 10) || 0
-    : 0;
+
+  let current: number;
+  const rowExists = result.rows.length > 0;
+
+  if (rowExists) {
+    current = parseInt((result.rows[0] as Record<string, unknown>)['value'] as string, 10) || 0;
+  } else {
+    // Scoped key doesn't exist yet — fall back to legacy key so pre-auth data isn't lost
+    const legacy = await db.execute({
+      sql: `SELECT value FROM user_settings WHERE key = 'total_shots'`,
+      args: [],
+    });
+    current = legacy.rows.length
+      ? parseInt((legacy.rows[0] as Record<string, unknown>)['value'] as string, 10) || 0
+      : 0;
+  }
+
   const next = Math.max(0, current + delta);
-  if (result.rows.length) {
+  if (rowExists) {
     await db.execute({
       sql: `UPDATE user_settings SET value = ? WHERE key = ?`,
       args: [String(next), scopedKey],
