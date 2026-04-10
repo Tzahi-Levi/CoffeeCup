@@ -234,6 +234,47 @@ router.post('/:coffeeId/logs', async (req: Request, res: Response) => {
   res.status(201).json({ data: rowToLog(created.rows[0] as Record<string, unknown>) });
 });
 
+// PUT /api/v1/coffees/:coffeeId/logs/:logId
+router.put('/:coffeeId/logs/:logId', async (req: Request, res: Response) => {
+  const userId = res.locals['userId'] as string;
+  const coffeeId = req.params['coffeeId'] as string;
+  const logId = req.params['logId'] as string;
+  const coffee = await db.execute({
+    sql: 'SELECT id FROM coffee_entries WHERE id = ? AND user_id = ?',
+    args: [coffeeId, userId],
+  });
+  if (!coffee.rows.length) {
+    res.status(404).json({ error: 'Coffee entry not found' });
+    return;
+  }
+  const existing = await db.execute({ sql: 'SELECT id FROM brew_logs WHERE id = ? AND coffee_id = ?', args: [logId, coffeeId] });
+  if (!existing.rows.length) {
+    res.status(404).json({ error: 'Brew log not found' });
+    return;
+  }
+  const body = req.body as Record<string, unknown>;
+  if (body['rating'] == null || body['doseGrams'] == null || body['grindLevel'] == null || body['brewTimeSeconds'] == null) {
+    res.status(400).json({ error: 'Missing required fields: rating, doseGrams, grindLevel, brewTimeSeconds' });
+    return;
+  }
+  await db.execute({
+    sql: `UPDATE brew_logs SET rating = ?, dose_grams = ?, grind_level = ?, brew_time_seconds = ?, yield_grams = ?, notes = ?
+          WHERE id = ? AND coffee_id = ?`,
+    args: [
+      body['rating'] as number,
+      body['doseGrams'] as number,
+      body['grindLevel'] as number,
+      body['brewTimeSeconds'] as number,
+      (body['yieldGrams'] as number | null) ?? null,
+      (body['notes'] as string | null) ?? null,
+      logId,
+      coffeeId,
+    ],
+  });
+  const updated = await db.execute({ sql: 'SELECT * FROM brew_logs WHERE id = ?', args: [logId] });
+  res.json({ data: rowToLog(updated.rows[0] as Record<string, unknown>) });
+});
+
 // DELETE /api/v1/coffees/:coffeeId/logs/:logId
 router.delete('/:coffeeId/logs/:logId', async (req: Request, res: Response) => {
   const userId = res.locals['userId'] as string;

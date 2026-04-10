@@ -102,7 +102,7 @@
           <div class="rd-form__actions">
             <button class="rd-form__btn rd-form__btn--cancel" (click)="cancelLogForm()">Cancel</button>
             <button class="rd-form__btn rd-form__btn--save" (click)="submitLog()" [disabled]="submitting || logRating === 0">
-              {{ submitting ? 'Saving…' : 'Save Shot' }}
+              {{ submitting ? 'Saving…' : editingLogId ? 'Update Shot' : 'Save Shot' }}
             </button>
           </div>
         </div>
@@ -131,6 +131,7 @@
             </div>
             <div class="rd-log-entry__right">
               <span class="rd-log-entry__date">{{ formatDate(log.createdAt) }}</span>
+              <button class="rd-log-entry__edit" (click)="editLog(log)" title="Edit">✏️</button>
               <button class="rd-log-entry__delete" (click)="deleteLog(log.id)" title="Delete">🗑️</button>
             </div>
           </div>

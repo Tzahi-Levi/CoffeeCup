@@ -21,6 +21,10 @@ export class BrewLogService {
     );
   }
 
+  updateLog(coffeeId: string, logId: string, payload: BrewLogPayload): Observable<{ data: BrewLog }> {
+    return this.http.put<{ data: BrewLog }>(`${API_BASE}/${coffeeId}/logs/${logId}`, payload);
+  }
+
   deleteLog(coffeeId: string, logId: string): Observable<void> {
     return this.http.delete<void>(`${API_BASE}/${coffeeId}/logs/${logId}`).pipe(
       tap(() => this.maintenanceService.loadSettings())

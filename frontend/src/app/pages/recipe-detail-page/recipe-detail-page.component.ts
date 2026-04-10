@@ -23,6 +23,7 @@ export class RecipeDetailPageComponent implements OnInit {
 
   showLogForm = false;
   submitting = false;
+  editingLogId: string | null = null;
 
   // Form fields — pre-filled from recipe, user adjusts
   logRating = 3;
@@ -70,6 +71,7 @@ export class RecipeDetailPageComponent implements OnInit {
   }
 
   openLogForm(coffee: CoffeeEntry): void {
+    this.editingLogId = null;
     this.logDose = coffee.doseGrams;
     this.logGrind = coffee.grindLevel;
     this.logBrewTime = coffee.brewTimeSeconds;
@@ -79,8 +81,20 @@ export class RecipeDetailPageComponent implements OnInit {
     this.showLogForm = true;
   }
 
+  editLog(log: BrewLog): void {
+    this.editingLogId = log.id;
+    this.logRating = log.rating;
+    this.logDose = log.doseGrams;
+    this.logGrind = log.grindLevel;
+    this.logBrewTime = log.brewTimeSeconds;
+    this.logYield = log.yieldGrams;
+    this.logNotes = log.notes ?? '';
+    this.showLogForm = true;
+  }
+
   cancelLogForm(): void {
     this.showLogForm = false;
+    this.editingLogId = null;
   }
 
   submitLog(): void {
@@ -94,18 +108,35 @@ export class RecipeDetailPageComponent implements OnInit {
       yieldGrams: this.logYield,
       notes: this.logNotes.trim() || null,
     };
-    this.brewLogService.addLog(this.coffeeId, payload).subscribe({
-      next: res => {
-        this.logs = [res.data, ...this.logs];
-        this.showLogForm = false;
-        this.submitting = false;
-        this.coffeeService.refresh().subscribe();
-      },
-      error: err => {
-        console.error('[RecipeDetail] Failed to save log', err);
-        this.submitting = false;
-      },
-    });
+
+    if (this.editingLogId) {
+      this.brewLogService.updateLog(this.coffeeId, this.editingLogId, payload).subscribe({
+        next: res => {
+          this.logs = this.logs.map(l => l.id === res.data.id ? res.data : l);
+          this.showLogForm = false;
+          this.editingLogId = null;
+          this.submitting = false;
+          this.coffeeService.refresh().subscribe();
+        },
+        error: err => {
+          console.error('[RecipeDetail] Failed to update log', err);
+          this.submitting = false;
+        },
+      });
+    } else {
+      this.brewLogService.addLog(this.coffeeId, payload).subscribe({
+        next: res => {
+          this.logs = [res.data, ...this.logs];
+          this.showLogForm = false;
+          this.submitting = false;
+          this.coffeeService.refresh().subscribe();
+        },
+        error: err => {
+          console.error('[RecipeDetail] Failed to save log', err);
+          this.submitting = false;
+        },
+      });
+    }
   }
 
   deleteLog(logId: string): void {
